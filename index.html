@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sokoban Classic</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Roboto+Mono&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div id="app">
+        <header>
+            <h1>Sokoban <span class="accent">Classic</span></h1>
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="label">Level</span>
+                    <span id="level-num" class="value">1</span>
+                </div>
+                <div class="stat-item">
+                    <span class="label">Moves</span>
+                    <span id="moves-count" class="value">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="label">Pushes</span>
+                    <span id="pushes-count" class="value">0</span>
+                </div>
+            </div>
+        </header>
+
+        <main id="game-container">
+            <div id="completed-badge">Level Solved</div>
+            <div id="board"></div>
+            <div id="message-overlay" class="hidden">
+                <div class="message-content">
+                    <h2 id="overlay-title">Level Complete!</h2>
+                    <p id="overlay-text">Fantastic job!</p>
+                    <div class="modal-actions">
+                        <button id="next-level-btn" class="primary-btn">Next Level</button>
+                        <button id="cancel-overlay-btn" class="secondary-btn">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <div class="controls-hint">
+                <span class="key">Arrows</span> Move |
+                <span class="key">BKSP</span> Undo |
+                <span class="key">DEL</span> Reset |
+                <span class="key">PGUP/DN</span> Levels
+            </div>
+            <div class="actions">
+                <div class="action-group">
+                    <button id="undo-btn" class="secondary-btn" title="Undo Move (Backspace/Z)">Undo</button>
+                    <button id="reset-btn" class="secondary-btn" title="Reset Level (Delete/R)">Reset</button>
+                </div>
+                <div class="level-nav">
+                    <button id="prev-btn" class="icon-btn" title="Previous Level (PageDown/Alt+Left)">&larr;</button>
+                    <button id="next-btn" class="icon-btn" title="Next Level (PageUp/Alt+Right)">&rarr;</button>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script src="js/parser.js"></script>
+    <script src="js/game.js"></script>
+    <script src="js/main.js"></script>
+</body>
+
+</html>
