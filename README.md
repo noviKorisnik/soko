@@ -1,4 +1,4 @@
-# Sokoban Premium Edition
+# Sokoban Classic Edition
 
 A polished, high-fidelity Sokoban clone built with modern web standards and a focus on premium user experience.
 
