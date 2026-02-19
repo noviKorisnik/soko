@@ -180,7 +180,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateUIState();
         const badge = document.getElementById('completed-badge');
         const container = document.getElementById('game-container');
-        document.getElementById('app-title').innerHTML = `Sokoban <span class="accent">${CONFIG.COLLECTION_NAME}</span>`;
+        document.getElementById('app-title').innerHTML = `SOKO <span class="accent">${CONFIG.COLLECTION_NAME}</span>`;
         if (game.isCompleted) { badge?.classList.add('show'); container?.classList.add('level-solved'); }
         else { badge?.classList.remove('show'); container?.classList.remove('level-solved'); overlay.classList.add('hidden'); }
     });
