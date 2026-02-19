@@ -1,6 +1,12 @@
-# Sokoban Classic Edition
+# Sokoban Pro
 
-A polished, high-fidelity Sokoban clone built with modern web standards and a focus on premium user experience.
+A polished, high-fidelity Sokoban experience built with modern web standards, featuring original handcrafted levels and a premium user experience.
+
+## 🧩 Level Collections
+
+The heart of Sokoban Pro is our **Original Collection**, which is under active development.
+- **Our Original Levels**: Hand-designed puzzles exclusive to this edition. We are launching with a curated set of **3 challenges**, with regular updates planned to expand this into a comprehensive original series.
+- **Classic Edition**: A secondary repository of legacy levels provided for players who wish to explore historical layouts.
 
 ## ✨ Design Philosophy & Aesthetics
 
@@ -49,7 +55,7 @@ To make the game feel like a complete "Campaign", we implemented a dual-layer pe
 This solution is designed to feel **Complete** by addressing the "edges" of the experience:
 1. **The Beginning**: Correctly restoring the last played level and tracking global completion.
 2. **The Middle**: Providing a frictionless undo/reset loop and responsive controls.
-3. **The End**: A specific "Epic Victory" screen for the final level of the 90+ collection.
+3. **The End**: A celebration of progress through our original handcrafted series.
 
 ---
-*Created with a focus on polished interactions and session continuity.*
+*Focusing on original puzzle design and premium session continuity.*
