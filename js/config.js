@@ -9,7 +9,12 @@ const CONFIG = {
     STORAGE_PREFIX: 'soko_our', // Change this when switching level sets
 
     // Level set display name
-    COLLECTION_NAME: 'Our Original Levels'
+    COLLECTION_NAME: 'Our Original Levels',
+
+    // Mobile Specific Optimizations
+    STRIP_OUTER_WALLS: true,  // Removes first/last row/col of walls to save space
+    AUTO_ROTATE: true,        // Pairs longer level dim with longer screen dim
+    AUTO_ADJUST_SIZE: true    // Dynamically calculates cell size to fill screen
 };
 
 export default CONFIG;

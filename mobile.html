@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Sokoban Mobile</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Roboto+Mono:wght@500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/mobile.css">
+</head>
+
+<body>
+    <div id="mobile-app">
+        <header>
+            <h1 id="app-title">Sokoban <span class="accent">Mobile</span></h1>
+        </header>
+
+        <section class="stats-bar">
+            <div class="stat">
+                <span class="label">Pushes</span>
+                <span id="pushes-count" class="value">0</span>
+            </div>
+            <div class="stat">
+                <span class="label">Level</span>
+                <span id="level-num" class="value">1</span>
+            </div>
+            <div class="stat">
+                <span class="label">Moves</span>
+                <span id="moves-count" class="value">0</span>
+            </div>
+        </section>
+
+        <main id="game-area">
+            <div id="completed-badge">Solved</div>
+            <div id="board"></div>
+        </main>
+
+        <footer class="controls-bar">
+            <button id="undo-btn" class="mobile-btn" title="Undo">↺</button>
+            <div class="nav-group">
+                <button id="prev-btn" class="mobile-btn">◀</button>
+                <button id="next-btn" class="mobile-btn">▶</button>
+            </div>
+            <button id="reset-btn" class="mobile-btn" title="Reset">⟳</button>
+        </footer>
+    </div>
+
+    <!-- Message Overlay -->
+    <div id="message-overlay" class="hidden">
+        <div class="overlay-content">
+            <h2 id="overlay-title">Level Complete!</h2>
+            <p id="overlay-text">Excellent job!</p>
+            <button id="next-level-btn" class="primary-btn">Next Level</button>
+            <button id="cancel-overlay-btn" class="secondary-btn"
+                style="margin-top: 15px; background: transparent; color: #94a3b8; border: none;">Keep looking</button>
+        </div>
+    </div>
+
+    <script src="js/mobile.js" type="module"></script>
+</body>
+
+</html>
