@@ -171,8 +171,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.addEventListener('levelComplete', (e) => {
         overlay.classList.remove('hidden');
         const overlayTitle = document.getElementById('overlay-title');
-        if (overlayTitle) overlayTitle.textContent = (e.detail && e.detail.isLast) ? "Epic Victory!" : "Level Complete!";
-        nextLevelBtn.disabled = (e.detail && e.detail.isLast);
+        const overlayText = document.getElementById('overlay-text');
+        const isLast = e.detail && e.detail.isLast;
+
+        if (overlayTitle) {
+            overlayTitle.textContent = isLast ? "Epic Victory!" : "Level Complete!";
+        }
+
+        if (overlayText) {
+            overlayText.textContent = isLast
+                ? `You have conquered all puzzles in the ${CONFIG.COLLECTION_NAME} collection!`
+                : "Excellent job!";
+        }
+
+        nextLevelBtn.style.display = isLast ? 'none' : 'block';
         updateUIState();
     });
 

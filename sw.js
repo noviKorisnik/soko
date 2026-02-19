@@ -1,4 +1,4 @@
-const CACHE_NAME = 'soko-v1';
+const CACHE_NAME = 'soko-v1.1';
 const ASSETS = [
     './',
     './index.html',
@@ -14,9 +14,27 @@ const ASSETS = [
 ];
 
 self.addEventListener('install', (event) => {
+    // Force the waiting service worker to become the active service worker.
+    self.skipWaiting();
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
             return cache.addAll(ASSETS);
+        })
+    );
+});
+
+// Cleanup old caches
+self.addEventListener('activate', (event) => {
+    event.waitUntil(
+        caches.keys().then((cacheNames) => {
+            return Promise.all(
+                cacheNames.map((cache) => {
+                    if (cache !== CACHE_NAME) {
+                        console.log('Clearing old cache:', cache);
+                        return caches.delete(cache);
+                    }
+                })
+            );
         })
     );
 });
