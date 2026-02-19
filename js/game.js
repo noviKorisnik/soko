@@ -344,8 +344,9 @@ export default class SokobanGame {
     }
 
     updateStats() {
-        this.statsElements.moves.textContent = this.moves;
-        this.statsElements.pushes.textContent = this.pushes;
-        this.statsElements.levelNum.textContent = this.currentLevelIndex + 1;
+        if (this.statsElements.moves) this.statsElements.moves.textContent = this.moves;
+        if (this.statsElements.pushes) this.statsElements.pushes.textContent = this.pushes;
+        if (this.statsElements.levelNum) this.statsElements.levelNum.textContent = this.currentLevelIndex + 1;
+        document.dispatchEvent(new CustomEvent('gameStateChanged'));
     }
 }

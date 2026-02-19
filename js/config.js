@@ -1,7 +1,7 @@
 /**
  * Game Configuration
  */
-const CONFIG = {
+const CONFIG0 = {
     // Current level set to load
     LEVEL_FILE: 'resources/Our-Original-Levels.txt',
 
@@ -18,10 +18,17 @@ const CONFIG = {
 };
 
 
-const CONFIG0 = {
+const CONFIG1 = {
     LEVEL_FILE: 'resources/Thinking-Rabbit-Original-Plus-Extra.txt',
     STORAGE_PREFIX: 'soko_classic',
-    COLLECTION_NAME: 'Classic Edition'
+    COLLECTION_NAME: 'Classic Edition',
+
+    // Mobile Specific Optimizations
+    STRIP_OUTER_WALLS: true,  // Removes first/last row/col of walls to save space
+    AUTO_ROTATE: true,        // Pairs longer level dim with longer screen dim
+    AUTO_ADJUST_SIZE: true    // Dynamically calculates cell size to fill screen
 };
+
+const CONFIG = CONFIG1;
 
 export default CONFIG;

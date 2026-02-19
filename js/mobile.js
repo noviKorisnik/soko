@@ -52,7 +52,54 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }, { passive: false });
 
-    // 3. Button Taps
+    // 3. Desktop Parity Keyboard Controls (for testing/hybrid devices)
+    document.addEventListener('keydown', (e) => {
+        // Handle Overlay Shortcuts
+        if (!overlay.classList.contains('hidden')) {
+            if (e.key === 'Escape') cancelBtn.click();
+            if (e.key === 'Enter') nextLevelBtn.click();
+            return;
+        }
+
+        if (game.isCompleted) {
+            if (e.key === 'PageUp' || (e.altKey && e.key === 'ArrowRight')) {
+                document.getElementById('next-btn').click();
+            } else if (e.key === 'PageDown' || (e.altKey && e.key === 'ArrowLeft')) {
+                document.getElementById('prev-btn').click();
+            } else if (e.key === 'r' || e.key === 'R' || e.key === 'Delete') {
+                game.reset();
+                hideOverlay();
+            } else if (e.key === 'z' || e.key === 'Z' || e.key === 'Backspace') {
+                game.undo();
+                hideOverlay();
+            }
+            return;
+        }
+
+        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'PageUp', 'PageDown'].includes(e.key)) {
+            e.preventDefault();
+        }
+
+        if (e.key === 'PageUp' || (e.altKey && e.key === 'ArrowRight')) {
+            document.getElementById('next-btn').click();
+            return;
+        }
+        if (e.key === 'PageDown' || (e.altKey && e.key === 'ArrowLeft')) {
+            document.getElementById('prev-btn').click();
+            return;
+        }
+
+        switch (e.key) {
+            case 'ArrowUp': case 'w': case 'W': game.move(0, -1); break;
+            case 'ArrowDown': case 's': case 'S': game.move(0, 1); break;
+            case 'ArrowLeft': case 'a': case 'A': game.move(-1, 0); break;
+            case 'ArrowRight': case 'd': case 'D': game.move(1, 0); break;
+            case 'z': case 'Z': case 'Backspace': game.undo(); hideOverlay(); break;
+            case 'r': case 'R': case 'Delete': game.reset(); hideOverlay(); break;
+        }
+    });
+
+    // 4. Button Taps
     document.getElementById('undo-btn').onclick = () => {
         game.undo();
         hideOverlay();
@@ -121,12 +168,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    const updateNavButtons = () => {
-        document.getElementById('prev-btn').disabled = (game.currentLevelIndex === 0);
-        const nextPossible = (game.currentLevelIndex < game.levels.length - 1) &&
-            (game.currentLevelIndex < game.highestCompletedLevel);
-        document.getElementById('next-btn').disabled = !nextPossible;
+    overlay.onclick = (e) => {
+        if (e.target !== nextLevelBtn) hideOverlay();
     };
+
+    const updateNavButtons = () => {
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const undoBtn = document.getElementById('undo-btn');
+        const resetBtn = document.getElementById('reset-btn');
+
+        if (prevBtn) prevBtn.disabled = (game.currentLevelIndex === 0);
+
+        const nextPossible = (game.currentLevelIndex < game.levels.length - 1) &&
+            (game.currentLevelIndex < game.highestCompletedLevel || game.isCompleted);
+        if (nextBtn) nextBtn.disabled = !nextPossible;
+
+        if (undoBtn) undoBtn.disabled = (game.history.length === 0);
+        if (resetBtn) resetBtn.disabled = (game.moves === 0);
+    };
+
+    document.addEventListener('gameStateChanged', updateNavButtons);
 
     // 6. Initial Load
     try {
@@ -137,6 +199,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         let lastLevel = parseInt(localStorage.getItem(`${CONFIG.STORAGE_PREFIX}_current_level`)) || 0;
         game.loadLevel(lastLevel);
+        updateNavButtons();
     } catch (err) {
         console.error('Failed to load levels:', err);
     }

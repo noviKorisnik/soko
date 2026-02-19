@@ -147,7 +147,8 @@ h1 {
     justify-content: center;
     align-items: center;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
-    z-index: 2;
+    z-index: 10;
+    /* Higher than target dot (5) to hide it */
 }
 
 .box::before {
@@ -296,6 +297,7 @@ button:disabled,
     cursor: not-allowed !important;
     transform: none !important;
     box-shadow: none !important;
+    pointer-events: none;
 }
 
 /* Completed Badge */
@@ -313,7 +315,7 @@ button:disabled,
     letter-spacing: 1px;
     box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
     pointer-events: none;
-    z-index: 5;
+    z-index: 105;
     opacity: 0;
     transform: translateY(-10px);
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);

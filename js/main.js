@@ -101,12 +101,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     const updateNavButtons = () => {
-        document.getElementById('prev-btn').disabled = (game.currentLevelIndex === 0);
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const undoBtn = document.getElementById('undo-btn');
+        const resetBtn = document.getElementById('reset-btn');
+
+        if (prevBtn) prevBtn.disabled = (game.currentLevelIndex === 0);
 
         const nextPossible = (game.currentLevelIndex < game.levels.length - 1) &&
-            (game.currentLevelIndex < game.highestCompletedLevel);
-        document.getElementById('next-btn').disabled = !nextPossible;
+            (game.currentLevelIndex < game.highestCompletedLevel || game.isCompleted);
+        if (nextBtn) nextBtn.disabled = !nextPossible;
+
+        // Disable Undo/Reset if no moves have been made
+        if (undoBtn) undoBtn.disabled = (game.history.length === 0);
+        if (resetBtn) resetBtn.disabled = (game.moves === 0);
     };
+
+    document.addEventListener('gameStateChanged', updateNavButtons);
 
     const hideOverlay = () => {
         overlay.classList.add('hidden');
@@ -137,6 +148,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.getElementById('next-btn').onclick = () => {
         game.loadLevel(game.currentLevelIndex + 1);
+    };
+
+    overlay.onclick = (e) => {
+        if (e.target !== nextLevelBtn) hideOverlay();
     };
 
     // Event Listeners
