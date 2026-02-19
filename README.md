@@ -37,8 +37,12 @@ To make the game feel like a complete "Campaign", we implemented a dual-layer pe
     - `Enter / Escape` for Modal interactions.
 - **Visual Feedback Loop**: 
     - Full-screen modals celebrate level completion.
-    *   Post-solve "Level Solved" badges and board dimming communicate the transition from "active play" to "solved state".
-    *   The player pulse stops upon victory, visually signaling "rest".
+    - Post-solve "Level Solved" badges and board dimming communicate the transition from "active play" to "solved state".
+    - The player pulse stops upon victory, visually signaling "rest".
+- **Mobile-First Touch Interaction**: 
+    - High-precision **Swipe Detection** for movement.
+    - Context-aware mobile footer with quick-access **Undo** and **Reset**.
+    - Responsive grid scaling ensures puzzles of all sizes fit perfectly on small screens.
 
 ## 🏁 Goal Fulfillment
 

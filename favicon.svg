@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Sokoban favicon">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+    <linearGradient id="box" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="url(#bg)"/>
+
+  <rect x="10" y="10" width="44" height="44" rx="8" fill="#0b1220" stroke="#334155" stroke-width="2"/>
+
+  <rect x="13" y="13" width="30" height="30" rx="5" fill="url(#box)" stroke="#fbbf24" stroke-width="1.6"/>
+  <path d="M18 18 L38 38 M38 18 L18 38" stroke="#fff7ed" stroke-width="2.2" stroke-linecap="round" opacity="0.9"/>
+
+  <circle cx="43" cy="43" r="9.5" fill="#38bdf8" stroke="#e0f2fe" stroke-width="1.8"/>
+  <circle cx="43" cy="43" r="3.2" fill="#f8fafc" opacity="0.95"/>
+</svg>
