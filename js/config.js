@@ -17,12 +17,11 @@ const CONFIG = {
     AUTO_ADJUST_SIZE: true    // Dynamically calculates cell size to fill screen
 };
 
-export default CONFIG;
 
-/*
-const CONFIG = {
+const CONFIG0 = {
     LEVEL_FILE: 'resources/Thinking-Rabbit-Original-Plus-Extra.txt',
     STORAGE_PREFIX: 'soko_classic',
     COLLECTION_NAME: 'Classic Edition'
 };
-*/
+
+export default CONFIG;

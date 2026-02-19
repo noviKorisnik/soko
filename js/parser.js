@@ -87,9 +87,7 @@ export default class SokobanParser {
         return gridLines.map(line => {
             // Replace '-' with ' ' (floor)
             let normalized = line.replace(/-/g, ' ');
-            // Pad to maxWidth if you want perfectly rectangular (useful for grid-area if needed)
-            // But usually we just let CSS Grid handle it.
-            return normalized;
+            return normalized.padEnd(maxWidth, ' ');
         });
     }
 }

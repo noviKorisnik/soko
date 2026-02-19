@@ -85,28 +85,30 @@ export default class SokobanGame {
     render() {
         this.boardElement.innerHTML = '';
 
-        // 1. Determine Grid View
-        let gridToRender = this.grid;
-        let startY = 0, endY = this.grid.length;
-        let startX = 0, getMaxX = () => Math.max(...this.grid.map(row => row.length));
+        // 1. Determine Grid View Bounds
+        let startY = 0;
+        let endY = this.grid.length;
+        let startX = 0;
+        let endX = this.grid[0] ? this.grid[0].length : 0;
 
-        // Mobile optimization: Strip outer walls if configured
+        // Mobile optimization: Strip outer walls (1 cell from each boundary)
         if (CONFIG.STRIP_OUTER_WALLS) {
-            // Check if all perimeter cells are walls before stripping
-            const canStripTop = this.grid[0].every(c => c === this.CELL_TYPES.WALL);
-            const canStripBottom = this.grid[this.grid.length - 1].every(c => c === this.CELL_TYPES.WALL);
-            const canStripLeft = this.grid.every(row => row[0] === this.CELL_TYPES.WALL);
-            const canStripRight = this.grid.every(row => row[row.length - 1] === this.CELL_TYPES.WALL);
+            const rowWidth = endX;
+            const colHeight = endY;
 
-            if (canStripTop) startY = 1;
-            if (canStripBottom) endY = this.grid.length - 1;
-            if (canStripLeft) startX = 1;
-            // Note: Right is trickier if rows aren't normalized yet, but parser usually does.
+            // Hard 1-cell trim as requested (we assume levels have at least 3x3 dimensions)
+            if (colHeight > 2) {
+                startY = 1;
+                endY = colHeight - 1;
+            }
+            if (rowWidth > 2) {
+                startX = 1;
+                endX = rowWidth - 1;
+            }
         }
 
         const viewRows = endY - startY;
-        const baseCols = getMaxX();
-        const viewCols = CONFIG.STRIP_OUTER_WALLS ? baseCols - 2 : baseCols;
+        const viewCols = endX - startX;
 
         // 2. Auto-rotate if configured
         let isRotated = false;
@@ -122,13 +124,16 @@ export default class SokobanGame {
         // 3. Size Calculations
         if (CONFIG.AUTO_ADJUST_SIZE) {
             const parent = this.boardElement.parentElement;
-            const padding = 40; // Total padding
+            const padding = 40; // Space for internal layout
             const availW = parent.clientWidth - padding;
             const availH = parent.clientHeight - padding;
 
-            const cellW = availW / finalCols;
-            const cellH = availH / finalRows;
-            const cellSize = Math.floor(Math.min(cellW, cellH, 60)); // Max 60px
+            // Account for the board's CSS border thickness
+            const borderSpace = 30; // 15px per side
+
+            const cellW = (availW - borderSpace) / finalCols;
+            const cellH = (availH - borderSpace) / finalRows;
+            const cellSize = Math.floor(Math.min(cellW, cellH, 60));
             this.boardElement.style.setProperty('--cell-size', `${cellSize}px`);
         }
 
@@ -138,10 +143,8 @@ export default class SokobanGame {
         // 4. Populate
         for (let r = 0; r < finalRows; r++) {
             for (let c = 0; c < finalCols; c++) {
-                // Map screen (r, c) back to grid (y, x)
                 let x, y;
                 if (isRotated) {
-                    // 90 deg rotation: x = viewCols - 1 - r + startX, y = c + startY
                     x = (viewCols - 1 - r) + startX;
                     y = c + startY;
                 } else {
@@ -153,7 +156,6 @@ export default class SokobanGame {
                 const cell = document.createElement('div');
                 cell.classList.add('cell');
 
-                // Determine base tile
                 if (char === this.CELL_TYPES.WALL) {
                     cell.classList.add('wall');
                 } else if (char === this.CELL_TYPES.TARGET || char === this.CELL_TYPES.PLAYER_ON_TARGET || char === this.CELL_TYPES.BOX_ON_TARGET) {
@@ -162,7 +164,6 @@ export default class SokobanGame {
                     cell.classList.add('floor');
                 }
 
-                // Determine dynamic object
                 if (char === this.CELL_TYPES.PLAYER || char === this.CELL_TYPES.PLAYER_ON_TARGET) {
                     const player = document.createElement('div');
                     player.classList.add('cell', 'player');
@@ -180,7 +181,6 @@ export default class SokobanGame {
             }
         }
 
-        // Save current view orientation for move logic
         this.isViewRotated = isRotated;
     }
 

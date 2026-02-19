@@ -22,16 +22,16 @@
 
         <section class="stats-bar">
             <div class="stat">
+                <span class="label">Moves</span>
+                <span id="moves-count" class="value">0</span>
+            </div>
+            <div class="stat">
                 <span class="label">Pushes</span>
                 <span id="pushes-count" class="value">0</span>
             </div>
             <div class="stat">
                 <span class="label">Level</span>
                 <span id="level-num" class="value">1</span>
-            </div>
-            <div class="stat">
-                <span class="label">Moves</span>
-                <span id="moves-count" class="value">0</span>
             </div>
         </section>
 
@@ -41,12 +41,18 @@
         </main>
 
         <footer class="controls-bar">
-            <button id="undo-btn" class="mobile-btn" title="Undo">↺</button>
+            <button id="undo-btn" class="mobile-btn" title="Undo">
+                <span class="btn-icon">↺</span>
+                <span class="btn-label">Undo</span>
+            </button>
             <div class="nav-group">
                 <button id="prev-btn" class="mobile-btn">◀</button>
                 <button id="next-btn" class="mobile-btn">▶</button>
             </div>
-            <button id="reset-btn" class="mobile-btn" title="Reset">⟳</button>
+            <button id="reset-btn" class="mobile-btn" title="Reset">
+                <span class="btn-icon">⟳</span>
+                <span class="btn-label">Reset</span>
+            </button>
         </footer>
     </div>
 
