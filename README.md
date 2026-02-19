@@ -1,10 +1,13 @@
-# Sokoban Pro
+# SOKO — See the solution.
 
 A polished, high-fidelity Sokoban experience built with modern web standards, featuring original handcrafted levels and a premium user experience.
 
+> [!TIP]
+> **SOKO is a PWA!** You can install it on your mobile device for a full-screen, native app experience and offline play.
+
 ## 🧩 Level Collections
 
-The heart of Sokoban Pro is our **Original Collection**, which is under active development.
+The heart of **SOKO** is our **Original Collection**, which is under active development.
 - **Our Original Levels**: Hand-designed puzzles exclusive to this edition. We are launching with a curated set of **3 challenges**, with regular updates planned to expand this into a comprehensive original series.
 - **Classic Edition**: A secondary repository of legacy levels provided for players who wish to explore historical layouts.
 

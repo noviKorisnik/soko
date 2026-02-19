@@ -32,6 +32,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="manifest" href="manifest.json">
 
     <!-- PRECONNECT -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -245,6 +246,13 @@
         // Reveal app when ready
         window.addEventListener('load', () => {
             document.body.classList.add('ready');
+
+            // Register Service Worker for PWA
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Soko SW Registered'))
+                    .catch(err => console.log('SW registration failed', err));
+            }
         });
     </script>
 </body>
