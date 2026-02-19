@@ -3,51 +3,182 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sokoban Classic</title>
-    <link rel="stylesheet" href="css/style.css">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Sokoban Pro</title>
+
+    <!-- PRECONNECT -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Roboto+Mono&display=swap"
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Roboto+Mono:wght@500&display=swap"
         rel="stylesheet">
+
+    <script>
+        /**
+         * INITIAL ROUTER
+         * Detects platform and injects the correct style/class before the first paint.
+         */
+        (function () {
+            const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+            const isPhone = /iPhone|Android|Mobi/i.test(navigator.userAgent);
+            const isSmall = window.innerWidth <= 800;
+
+            window.isMobile = (isTouch && isPhone) || isSmall;
+
+            document.documentElement.classList.toggle('is-mobile', window.isMobile);
+            document.documentElement.classList.toggle('is-desktop', !window.isMobile);
+
+            const link = document.createElement('link');
+            link.id = 'theme-css';
+            link.rel = 'stylesheet';
+            link.href = window.isMobile ? 'css/mobile.css' : 'css/desktop.css';
+            document.head.appendChild(link);
+        })();
+    </script>
+
+    <style>
+        /* Transition safety / Hide until loaded */
+        body {
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        body.ready {
+            opacity: 1;
+        }
+
+        /* Unified Hide Utility */
+        .desktop-only {
+            display: none !important;
+        }
+
+        .mobile-only {
+            display: none !important;
+        }
+
+        .is-desktop .desktop-only {
+            display: block !important;
+        }
+
+        .is-desktop header.desktop-only,
+        .is-desktop footer.desktop-only {
+            display: flex !important;
+        }
+
+        .is-mobile .mobile-only {
+            display: block !important;
+        }
+
+        .is-mobile section.mobile-only,
+        .is-mobile footer.mobile-only {
+            display: flex !important;
+        }
+    </style>
 </head>
 
 <body>
     <div id="app">
+        <!-- HEADER section -->
         <header>
-            <h1>Sokoban <span class="accent">Classic</span></h1>
+            <h1 id="app-title">Sokoban</h1>
+            <!-- Unified Layout Stats -->
             <div class="stats">
                 <div class="stat-item">
                     <span class="label">Level</span>
-                    <span id="level-num" class="value">1</span>
+                    <span id="level-num-desktop" class="value">1</span>
                 </div>
                 <div class="stat-item">
                     <span class="label">Moves</span>
-                    <span id="moves-count" class="value">0</span>
+                    <span id="moves-count-desktop" class="value">0</span>
                 </div>
                 <div class="stat-item">
                     <span class="label">Pushes</span>
-                    <span id="pushes-count" class="value">0</span>
+                    <span id="pushes-count-desktop" class="value">0</span>
+                </div>
+                <div class="header-actions" style="display: flex; gap: 8px; margin-left: 20px;">
+                    <button id="settings-btn-desktop" class="icon-btn" title="Settings">⚙</button>
+                    <button id="help-btn-desktop" class="icon-btn help-trigger" title="How to Play">?</button>
                 </div>
             </div>
         </header>
 
+        <!-- MOBILE STATS BAR (Independent section) -->
+        <section class="stats-bar mobile-only">
+            <div class="stat">
+                <span class="label">Level</span>
+                <span id="level-num-mobile" class="value">1</span>
+            </div>
+            <div class="stat">
+                <span class="label">Moves</span>
+                <span id="moves-count-mobile" class="value">0</span>
+            </div>
+            <div class="stat">
+                <span class="label">Pushes</span>
+                <span id="pushes-count-mobile" class="value">0</span>
+            </div>
+            <div class="stat stat-actions">
+                <button id="settings-btn-mobile" class="mobile-btn" title="Settings">⚙</button>
+                <button id="help-btn-mobile" class="mobile-btn help-trigger" title="How to Play">?</button>
+            </div>
+        </section>
+
+        <!-- GAME CONTAINER (Shared Core) -->
         <main id="game-container">
-            <div id="completed-badge">Level Solved</div>
+            <div id="completed-badge">Solved</div>
             <div id="board"></div>
+
+            <!-- OVERLAY (Unified) -->
             <div id="message-overlay" class="hidden">
-                <div class="message-content">
+                <div class="overlay-content message-content">
                     <h2 id="overlay-title">Level Complete!</h2>
-                    <p id="overlay-text">Fantastic job!</p>
+                    <p id="overlay-text">Excellent job!</p>
                     <div class="modal-actions">
                         <button id="next-level-btn" class="primary-btn">Next Level</button>
-                        <button id="cancel-overlay-btn" class="secondary-btn">Cancel</button>
                     </div>
+                    <button id="cancel-overlay-btn" class="secondary-btn"
+                        style="margin-top: 15px; background: transparent; color: #94a3b8; border: none; padding: 10px;">
+                        Keep looking
+                    </button>
+                </div>
+            </div>
+
+            <!-- ABOUT MODAL -->
+            <div id="about-modal" class="hidden">
+                <div class="overlay-content message-content">
+                    <h2>How to Play</h2>
+                    <div class="help-scroll"
+                        style="text-align: left; margin: 20px 0; max-height: 50vh; overflow-y: auto; padding-right: 10px;">
+                        <p style="margin-bottom: 10px;"><strong class="accent">Goal:</strong> Push all boxes (<span
+                                style="color:var(--box-color)">■</span>) onto target dots (<span
+                                style="color:var(--target-color)">●</span>).</p>
+                        <p style="margin-bottom: 10px;"><strong class="accent">Movement:</strong> Use Swipe or
+                            Arrows/WASD to move your player (<span style="color:var(--player-color)">●</span>).</p>
+                        <ul style="margin-left: 20px; color: var(--text-muted); font-size: 0.9rem;">
+                            <li>You can only push one box at a time.</li>
+                            <li>You cannot pull boxes.</li>
+                            <li>Undo any move if you get stuck!</li>
+                        </ul>
+                    </div>
+                    <button id="close-about-btn" class="primary-btn">Got it!</button>
+                </div>
+            </div>
+
+            <!-- SETTINGS MODAL -->
+            <div id="settings-modal" class="hidden">
+                <div class="overlay-content message-content">
+                    <h2>Select Edition</h2>
+                    <div id="edition-list"
+                        style="display: flex; flex-direction: column; gap: 12px; margin: 25px 0; width: 100%;">
+                        <!-- Populated dynamiclly -->
+                    </div>
+                    <button id="close-settings-btn" class="secondary-btn" style="width: 100%;">Cancel</button>
                 </div>
             </div>
         </main>
 
-        <footer>
+        <!-- FOOTER: Desktop -->
+        <footer class="desktop-only">
             <div class="controls-hint">
                 <span class="key">Arrows</span> Move |
                 <span class="key">BKSP</span> Undo |
@@ -56,18 +187,40 @@
             </div>
             <div class="actions">
                 <div class="action-group">
-                    <button id="undo-btn" class="secondary-btn" title="Undo Move (Backspace/Z)">Undo</button>
-                    <button id="reset-btn" class="secondary-btn" title="Reset Level (Delete/R)">Reset</button>
+                    <button id="undo-btn-desktop" class="secondary-btn">Undo</button>
+                    <button id="reset-btn-desktop" class="secondary-btn">Reset</button>
                 </div>
                 <div class="level-nav">
-                    <button id="prev-btn" class="icon-btn" title="Previous Level (PageDown/Alt+Left)">&larr;</button>
-                    <button id="next-btn" class="icon-btn" title="Next Level (PageUp/Alt+Right)">&rarr;</button>
+                    <button id="prev-btn-desktop" class="icon-btn">&larr;</button>
+                    <button id="next-btn-desktop" class="icon-btn">&rarr;</button>
                 </div>
             </div>
         </footer>
+
+        <!-- FOOTER: Mobile -->
+        <footer class="controls-bar mobile-only">
+            <button id="undo-btn-mobile" class="mobile-btn">
+                <span class="btn-icon">↺</span>
+                <span class="btn-label">Undo</span>
+            </button>
+            <div class="nav-group">
+                <button id="prev-btn-mobile" class="mobile-btn">◀</button>
+                <button id="next-btn-mobile" class="mobile-btn">▶</button>
+            </div>
+            <button id="reset-btn-mobile" class="mobile-btn">
+                <span class="btn-icon">⟳</span>
+                <span class="btn-label">Reset</span>
+            </button>
+        </footer>
     </div>
 
-    <script src="js/main.js" type="module"></script>
+    <script type="module" src="js/app.js"></script>
+    <script>
+        // Reveal app when ready
+        window.addEventListener('load', () => {
+            document.body.classList.add('ready');
+        });
+    </script>
 </body>
 
 </html>

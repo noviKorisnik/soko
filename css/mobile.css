@@ -37,7 +37,7 @@ body {
 }
 
 /* VERTICAL LAYOUT (Default) */
-#mobile-app {
+#app {
     display: flex;
     flex-direction: column;
     width: 100%;
@@ -84,8 +84,24 @@ h1 {
     color: var(--accent-color);
 }
 
+.stats {
+    display: none;
+}
+
+.stat-actions {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+}
+
+.stat-actions .mobile-btn {
+    min-width: 44px;
+    height: 44px;
+    padding: 0;
+}
+
 /* THE BOARD */
-#game-area {
+#game-container {
     flex: 1;
     display: flex;
     justify-content: center;
@@ -214,8 +230,28 @@ h1 {
     text-align: center;
 }
 
-#message-overlay.hidden {
+#message-overlay.hidden,
+#about-modal.hidden,
+#settings-modal.hidden {
     display: none;
+}
+
+#about-modal,
+#settings-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(15px);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+    text-align: center;
 }
 
 .overlay-content h2 {
@@ -241,7 +277,7 @@ h1 {
 
 /* HORIZONTAL LAYOUT */
 @media screen and (orientation: landscape) {
-    #mobile-app {
+    #app {
         flex-direction: row;
     }
 
@@ -259,7 +295,7 @@ h1 {
         border-right: 1px solid rgba(255, 255, 255, 0.05);
     }
 
-    #game-area {
+    #game-container {
         flex: 1;
     }
 
@@ -273,6 +309,10 @@ h1 {
     }
 
     .nav-group {
+        flex-direction: column;
+    }
+
+    .stat-actions {
         flex-direction: column;
     }
 }

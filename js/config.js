@@ -1,34 +1,34 @@
 /**
  * Game Configuration
  */
-const CONFIG0 = {
-    // Current level set to load
-    LEVEL_FILE: 'resources/Our-Original-Levels.txt',
+const COLLECTIONS = [
+    {
+        ID: 'our',
+        LEVEL_FILE: 'resources/Our-Original-Levels.txt',
+        STORAGE_PREFIX: 'soko_our',
+        COLLECTION_NAME: ' Our Original Levels',
+        STRIP_OUTER_WALLS: true,
+        AUTO_ROTATE: true,
+        AUTO_ADJUST_SIZE: true
+    },
+    {
+        ID: 'classic',
+        LEVEL_FILE: 'resources/Thinking-Rabbit-Original-Plus-Extra.txt',
+        STORAGE_PREFIX: 'soko_classic',
+        COLLECTION_NAME: 'Classic Edition',
+        STRIP_OUTER_WALLS: true,
+        AUTO_ROTATE: true,
+        AUTO_ADJUST_SIZE: true
+    }
+];
 
-    // Prefix for localStorage to keep progress separate for different level sets
-    STORAGE_PREFIX: 'soko_our', // Change this when switching level sets
+// Determine active collection
+const savedCollection = localStorage.getItem('soko_active_collection') || 'classic';
+const activeCollection = COLLECTIONS.find(c => c.ID === savedCollection) || COLLECTIONS[1];
 
-    // Level set display name
-    COLLECTION_NAME: 'Our Original Levels',
-
-    // Mobile Specific Optimizations
-    STRIP_OUTER_WALLS: true,  // Removes first/last row/col of walls to save space
-    AUTO_ROTATE: true,        // Pairs longer level dim with longer screen dim
-    AUTO_ADJUST_SIZE: true    // Dynamically calculates cell size to fill screen
+const CONFIG = {
+    ...activeCollection,
+    COLLECTIONS // Export available options
 };
-
-
-const CONFIG1 = {
-    LEVEL_FILE: 'resources/Thinking-Rabbit-Original-Plus-Extra.txt',
-    STORAGE_PREFIX: 'soko_classic',
-    COLLECTION_NAME: 'Classic Edition',
-
-    // Mobile Specific Optimizations
-    STRIP_OUTER_WALLS: true,  // Removes first/last row/col of walls to save space
-    AUTO_ROTATE: true,        // Pairs longer level dim with longer screen dim
-    AUTO_ADJUST_SIZE: true    // Dynamically calculates cell size to fill screen
-};
-
-const CONFIG = CONFIG1;
 
 export default CONFIG;
