@@ -3,7 +3,7 @@
  * Handles the "Thinking Rabbit Original" format.
  */
 
-class SokobanParser {
+export default class SokobanParser {
     static parse(content) {
         const levels = [];
         const lines = content.split(/\r?\n/);

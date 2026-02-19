@@ -2,13 +2,16 @@
  * Core Game Engine for Sokoban
  */
 
-class SokobanGame {
+import CONFIG from './config.js';
+import SokobanParser from './parser.js';
+
+export default class SokobanGame {
     constructor(boardElement, statsElements) {
         this.boardElement = boardElement;
         this.statsElements = statsElements; // { moves, pushes, levelNum }
 
         this.currentLevelIndex = 0;
-        this.highestCompletedLevel = parseInt(localStorage.getItem('soko_highest')) || 0;
+        this.highestCompletedLevel = parseInt(localStorage.getItem(`${CONFIG.STORAGE_PREFIX}_highest`)) || 0;
         this.isCompleted = false;
         this.levels = [];
         this.grid = []; // 2D array of cells
@@ -45,7 +48,7 @@ class SokobanGame {
         }
 
         this.currentLevelIndex = index;
-        localStorage.setItem('soko_current_level', index);
+        localStorage.setItem(`${CONFIG.STORAGE_PREFIX}_current_level`, index);
         this.isCompleted = false;
 
         const savedData = useSavedState ? this.getSavedState(index) : null;
@@ -235,7 +238,7 @@ class SokobanGame {
         // Update highest completed
         if (this.currentLevelIndex >= this.highestCompletedLevel) {
             this.highestCompletedLevel = this.currentLevelIndex + 1;
-            localStorage.setItem('soko_highest', this.highestCompletedLevel);
+            localStorage.setItem(`${CONFIG.STORAGE_PREFIX}_highest`, this.highestCompletedLevel);
         }
 
         if (triggerEvent) {
@@ -256,16 +259,16 @@ class SokobanGame {
             pushes: this.pushes,
             history: this.history
         };
-        localStorage.setItem(`soko_state_${this.currentLevelIndex}`, JSON.stringify(data));
+        localStorage.setItem(`${CONFIG.STORAGE_PREFIX}_state_${this.currentLevelIndex}`, JSON.stringify(data));
     }
 
     getSavedState(index) {
-        const item = localStorage.getItem(`soko_state_${index}`);
+        const item = localStorage.getItem(`${CONFIG.STORAGE_PREFIX}_state_${index}`);
         return item ? JSON.parse(item) : null;
     }
 
     clearSavedState(index) {
-        localStorage.removeItem(`soko_state_${index}`);
+        localStorage.removeItem(`${CONFIG.STORAGE_PREFIX}_state_${index}`);
     }
 
     updateStats() {

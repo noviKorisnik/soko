@@ -1,8 +1,15 @@
+import CONFIG from './config.js';
+import SokobanGame from './game.js';
+import SokobanParser from './parser.js';
+
 /**
  * Main application entry point
  */
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // Update Title from Config
+    document.querySelector('h1').innerHTML = `Sokoban <span class="accent">${CONFIG.COLLECTION_NAME}</span>`;
+
     const board = document.getElementById('board');
     const stats = {
         moves: document.getElementById('moves-count'),
@@ -177,17 +184,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Load level data and THEN start the game
     try {
-        const response = await fetch('resources/Thinking-Rabbit-Original-Plus-Extra.txt');
+        const response = await fetch(CONFIG.LEVEL_FILE);
         const content = await response.text();
         const levels = SokobanParser.parse(content);
-        console.log(`Loaded ${levels.length} levels.`);
+        console.log(`Loaded ${levels.length} levels from ${CONFIG.LEVEL_FILE}.`);
         game.setLevels(levels);
 
         // Initial button state before first level load
         updateNavButtons();
 
         // Load the stored level (or 0)
-        let lastLevel = parseInt(localStorage.getItem('soko_current_level')) || 0;
+        let lastLevel = parseInt(localStorage.getItem(`${CONFIG.STORAGE_PREFIX}_current_level`)) || 0;
         game.loadLevel(lastLevel);
     } catch (err) {
         console.error('Failed to load levels:', err);
