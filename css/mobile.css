@@ -289,20 +289,23 @@ h1 {
 }
 
 .secondary-btn {
-    background: rgba(255, 255, 255, 0.05);
-    color: var(--text-muted);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(10px);
+    color: var(--text-color);
+    opacity: 0.9;
+    border: 1px solid rgba(255, 255, 255, 0.15);
     padding: 12px 30px;
     border-radius: 25px;
     font-weight: 600;
     font-size: 0.9rem;
-    transition: all 0.2s;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .secondary-btn:active {
-    background: rgba(255, 255, 255, 0.1);
-    color: var(--text-color);
-    transform: scale(0.98);
+    background: rgba(255, 255, 255, 0.15);
+    transform: scale(0.96);
+    opacity: 1;
+    border-color: var(--accent-color);
 }
 
 #cancel-overlay-btn {
