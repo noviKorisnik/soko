@@ -324,11 +324,10 @@ export default class SokobanGame {
                 this.CELL_TYPES.TARGET : this.CELL_TYPES.FLOOR;
 
             // Bring it back to the landing spot (where player was before undo)
-            // Note: the player is already moved back, so we use the grid state at landing spot
             const landingChar = this.grid[boxLandingY][boxLandingX];
-            // Since player is moved back, landingChar is currently PLAYER or PLAYER_ON_TARGET
-            // We need to set it to BOX or BOX_ON_TARGET
-            this.grid[boxLandingY][boxLandingX] = (landingChar === this.CELL_TYPES.PLAYER_ON_TARGET) ?
+
+            // Check if the landing field is a TARGET (since player already moved back)
+            this.grid[boxLandingY][boxLandingX] = (landingChar === this.CELL_TYPES.TARGET) ?
                 this.CELL_TYPES.BOX_ON_TARGET : this.CELL_TYPES.BOX;
 
             this.pushes--;
