@@ -18,7 +18,7 @@ export default class SokobanGame {
         this.playerPos = { x: 0, y: 0 };
         this.moves = 0;
         this.pushes = 0;
-        this.history = []; // For undo
+        this.history = ''; // LURD string
 
         this.CELL_TYPES = {
             WALL: '#',
@@ -58,7 +58,7 @@ export default class SokobanGame {
             this.playerPos = savedData.playerPos;
             this.moves = savedData.moves;
             this.pushes = savedData.pushes;
-            this.history = savedData.history || [];
+            this.history = savedData.history || '';
         } else {
             const levelData = this.levels[index];
             const rawGrid = SokobanParser.normalizeGrid(levelData.grid);
@@ -73,7 +73,7 @@ export default class SokobanGame {
             });
             this.moves = 0;
             this.pushes = 0;
-            this.history = [];
+            this.history = '';
         }
 
         this.updateStats();
@@ -219,7 +219,7 @@ export default class SokobanGame {
             const behindBoxChar = this.grid[nextBoxY][nextBoxX];
             if (behindBoxChar === this.CELL_TYPES.FLOOR || behindBoxChar === this.CELL_TYPES.TARGET) {
                 // Save state for undo
-                this.saveHistory();
+                this.saveHistory(dx, dy, true);
 
                 // Move box
                 this.grid[nextBoxY][nextBoxX] = (behindBoxChar === this.CELL_TYPES.TARGET) ?
@@ -245,7 +245,7 @@ export default class SokobanGame {
 
         // 3. Floor or Target
         if (targetChar === this.CELL_TYPES.FLOOR || targetChar === this.CELL_TYPES.TARGET) {
-            this.saveHistory();
+            this.saveHistory(dx, dy, false);
             this.executePlayerMove(newX, newY);
             this.moves++;
             this.saveState();
@@ -269,24 +269,72 @@ export default class SokobanGame {
         this.playerPos = { x: newX, y: newY };
     }
 
-    saveHistory() {
-        // Simple deep clone of grid and status
-        this.history.push({
-            grid: this.grid.map(row => [...row]),
-            playerPos: { ...this.playerPos },
-            moves: this.moves,
-            pushes: this.pushes
-        });
-        if (this.history.length > 50) this.history.shift(); // Limit undo stack
+    saveHistory(dx, dy, isPush) {
+        let moveChar = '';
+        if (dx === 0 && dy === -1) moveChar = 'u';
+        else if (dx === 0 && dy === 1) moveChar = 'd';
+        else if (dx === -1 && dy === 0) moveChar = 'l';
+        else if (dx === 1 && dy === 0) moveChar = 'r';
+
+        if (isPush) moveChar = moveChar.toUpperCase();
+        this.history += moveChar;
     }
 
     undo() {
         if (this.history.length === 0) return;
-        const state = this.history.pop();
-        this.grid = state.grid;
-        this.playerPos = state.playerPos;
-        this.moves = state.moves;
-        this.pushes = state.pushes;
+
+        const lastMove = this.history.slice(-1);
+        this.history = this.history.slice(0, -1);
+
+        const isPush = lastMove === lastMove.toUpperCase();
+        const move = lastMove.toLowerCase();
+
+        let dx = 0, dy = 0;
+        if (move === 'u') dy = -1;
+        else if (move === 'd') dy = 1;
+        else if (move === 'l') dx = -1;
+        else if (move === 'r') dx = 1;
+
+        // 1. Move player back
+        const oldX = this.playerPos.x - dx;
+        const oldY = this.playerPos.y - dy;
+
+        // Current tile becomes floor/target again
+        const currentPosChar = this.grid[this.playerPos.y][this.playerPos.x];
+        this.grid[this.playerPos.y][this.playerPos.x] = (currentPosChar === this.CELL_TYPES.PLAYER_ON_TARGET) ?
+            this.CELL_TYPES.TARGET : this.CELL_TYPES.FLOOR;
+
+        // Previous tile becomes player/player_on_target
+        const prevTileChar = this.grid[oldY][oldX];
+        this.grid[oldY][oldX] = (prevTileChar === this.CELL_TYPES.TARGET) ?
+            this.CELL_TYPES.PLAYER_ON_TARGET : this.CELL_TYPES.PLAYER;
+
+        this.playerPos = { x: oldX, y: oldY };
+
+        // 2. If it was a push, pull the box back
+        if (isPush) {
+            const boxX = oldX + dx * 2;
+            const boxY = oldY + dy * 2;
+            const boxLandingX = oldX + dx;
+            const boxLandingY = oldY + dy;
+
+            // Box that was pushed away
+            const boxChar = this.grid[boxY][boxX];
+            this.grid[boxY][boxX] = (boxChar === this.CELL_TYPES.BOX_ON_TARGET) ?
+                this.CELL_TYPES.TARGET : this.CELL_TYPES.FLOOR;
+
+            // Bring it back to the landing spot (where player was before undo)
+            // Note: the player is already moved back, so we use the grid state at landing spot
+            const landingChar = this.grid[boxLandingY][boxLandingX];
+            // Since player is moved back, landingChar is currently PLAYER or PLAYER_ON_TARGET
+            // We need to set it to BOX or BOX_ON_TARGET
+            this.grid[boxLandingY][boxLandingX] = (landingChar === this.CELL_TYPES.PLAYER_ON_TARGET) ?
+                this.CELL_TYPES.BOX_ON_TARGET : this.CELL_TYPES.BOX;
+
+            this.pushes--;
+        }
+
+        this.moves--;
         this.isCompleted = false;
         this.saveState();
         this.updateStats();
