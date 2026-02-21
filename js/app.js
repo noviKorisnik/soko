@@ -204,5 +204,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         game.setLevels(SokobanParser.parse(await response.text()));
         game.loadLevel(parseInt(localStorage.getItem(`${CONFIG.STORAGE_PREFIX}_current_level`)) || 0);
         updateUIState();
+
+        // Dynamic Versioning from Service Worker
+        fetch('sw.js').then(r => r.text()).then(text => {
+            const match = text.match(/const CACHE_NAME = '([^']+)';/);
+            if (match) {
+                const version = match[1].split('-').pop(); // Get v1.2 part
+                const verElement = document.querySelector('.game-id');
+                if (verElement) verElement.textContent = `SOKO-${version}-LURD`.toUpperCase();
+            }
+        });
     } catch (err) { console.error('Failed to load levels:', err); }
 });

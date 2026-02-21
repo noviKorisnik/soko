@@ -1,0 +1,121 @@
+/* Shared styles for both Desktop and Mobile */
+
+/* Transition safety / Hide until loaded */
+body {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+body.ready {
+    opacity: 1;
+}
+
+/* Unified Hide Utility */
+.desktop-only {
+    display: none !important;
+}
+
+.mobile-only {
+    display: none !important;
+}
+
+.is-desktop .desktop-only {
+    display: block !important;
+}
+
+.is-desktop header.desktop-only,
+.is-desktop footer.desktop-only {
+    display: flex !important;
+}
+
+.is-mobile .mobile-only {
+    display: block !important;
+}
+
+.is-mobile section.mobile-only,
+.is-mobile footer.mobile-only {
+    display: flex !important;
+}
+
+/* Modal and Overlay shared styles (moved from inline where possible) */
+.help-scroll {
+    text-align: left;
+    max-height: 40vh;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+h3 {
+    color: var(--text-color);
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+}
+
+.branding {
+    margin-bottom: 25px;
+}
+
+.branding h2 {
+    margin-bottom: 5px;
+}
+
+.branding .tagline {
+    font-size: 0.9rem;
+    color: var(--accent-color);
+    margin-bottom: 10px;
+}
+
+.branding .credits {
+    font-size: 0.8rem;
+    line-height: 1.4;
+    color: var(--text-muted);
+}
+
+.branding .game-id {
+    font-size: 0.6rem;
+    color: var(--accent-color);
+    opacity: 0.7;
+    /* Slightly more visible */
+    font-family: 'Roboto Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+#edition-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+}
+
+.modal-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    width: 100%;
+}
+
+.is-desktop .modal-actions {
+    flex-direction: row;
+    justify-content: center;
+}
+
+.header-actions {
+    display: flex;
+    gap: 8px;
+    margin-left: 20px;
+}
+
+/* Z-Index Registry */
+#completed-badge {
+    z-index: 100;
+    /* Above the game board */
+}
+
+#message-overlay,
+#about-modal,
+#settings-modal {
+    z-index: 300 !important;
+    /* Top layer */
+}
