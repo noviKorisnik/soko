@@ -40,6 +40,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Roboto+Mono:wght@500&display=swap"
         rel="stylesheet">
+    <link rel="stylesheet" href="css/common.css">
 
     <script>
         /**
@@ -64,44 +65,6 @@
         })();
     </script>
 
-    <style>
-        /* Transition safety / Hide until loaded */
-        body {
-            opacity: 0;
-            transition: opacity 0.2s ease;
-        }
-
-        body.ready {
-            opacity: 1;
-        }
-
-        /* Unified Hide Utility */
-        .desktop-only {
-            display: none !important;
-        }
-
-        .mobile-only {
-            display: none !important;
-        }
-
-        .is-desktop .desktop-only {
-            display: block !important;
-        }
-
-        .is-desktop header.desktop-only,
-        .is-desktop footer.desktop-only {
-            display: flex !important;
-        }
-
-        .is-mobile .mobile-only {
-            display: block !important;
-        }
-
-        .is-mobile section.mobile-only,
-        .is-mobile footer.mobile-only {
-            display: flex !important;
-        }
-    </style>
 </head>
 
 <body>
@@ -123,7 +86,7 @@
                     <span class="label">Pushes</span>
                     <span id="pushes-count-desktop" class="value">0</span>
                 </div>
-                <div class="header-actions" style="display: flex; gap: 8px; margin-left: 20px;">
+                <div class="header-actions">
                     <button id="settings-btn-desktop" class="icon-btn" title="Settings">⚙</button>
                     <button id="help-btn-desktop" class="icon-btn help-trigger" title="How to Play">?</button>
                 </div>
@@ -162,33 +125,28 @@
                     <p id="overlay-text">Excellent job!</p>
                     <div class="modal-actions">
                         <button id="next-level-btn" class="primary-btn">Next Level</button>
+                        <button id="cancel-overlay-btn" class="secondary-btn">
+                            Keep looking
+                        </button>
                     </div>
-                    <button id="cancel-overlay-btn" class="secondary-btn">
-                        Keep looking
-                    </button>
                 </div>
             </div>
 
             <!-- ABOUT MODAL -->
             <div id="about-modal" class="hidden">
                 <div class="overlay-content message-content">
-                    <div class="branding" style="margin-bottom: 25px;">
-                        <div class="game-id"
-                            style="font-size: 0.6rem; color: var(--accent-color); opacity: 0.5; margin-bottom: 10px; font-family: 'Roboto Mono', monospace; text-transform: uppercase; letter-spacing: 2px;">
-                            Project-ID: SOKO-ES6-PWA
-                        </div>
-                        <h2 style="margin-bottom: 5px;">SOKO</h2>
-                        <p style="font-size: 0.9rem; color: var(--accent-color); margin-bottom: 10px;">See the solution.
-                        </p>
-                        <p style="font-size: 0.8rem; line-height: 1.4; color: var(--text-muted);">
+                    <div class="branding">
+                        <div class="game-id"></div>
+                        <h2>SOKO</h2>
+                        <p class="tagline">See the solution.</p>
+                        <p class="credits">
                             A modern puzzle experience by Dejan Katasic, noviKorisnik, and Boneco Biruta.
                             Push boxes, plan ahead, and master handcrafted challenges.
                         </p>
                     </div>
 
-                    <h3 style="color: var(--text-color); font-size: 1.1rem; margin-bottom: 15px;">How to Play</h3>
-                    <div class="help-scroll"
-                        style="text-align: left; margin: 0 0 20px 0; max-height: 40vh; overflow-y: auto; padding-right: 10px;">
+                    <h3>How to Play</h3>
+                    <div class="help-scroll">
                         <p style="margin-bottom: 10px;"><strong class="accent">Goal:</strong> Push all boxes (<span
                                 style="color:var(--box-color)">■</span>) onto target dots (<span
                                 style="color:var(--target-color)">●</span>).</p>
@@ -208,8 +166,7 @@
             <div id="settings-modal" class="hidden">
                 <div class="overlay-content message-content">
                     <h2>Select Edition</h2>
-                    <div id="edition-list"
-                        style="display: flex; flex-direction: column; gap: 12px; margin: 25px 0; width: 100%;">
+                    <div id="edition-list">
                         <!-- Populated dynamiclly -->
                     </div>
                     <button id="close-settings-btn" class="secondary-btn" style="width: 100%;">Cancel</button>

@@ -91,7 +91,7 @@ h1 {
 .stat-actions {
     display: flex;
     flex-direction: row;
-    gap: 8px;
+    /* gap: 8px; */
 }
 
 .stat-actions .mobile-btn {
@@ -151,7 +151,7 @@ h1 {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    /* gap: 4px; */
 }
 
 .btn-label {
@@ -210,7 +210,6 @@ h1 {
     opacity: 0;
     transform: translateY(-10px);
     transition: all 0.3s ease;
-    z-index: 105;
     /* Above board and overlay */
 }
 
@@ -308,9 +307,7 @@ h1 {
     border-color: var(--accent-color);
 }
 
-#cancel-overlay-btn {
-    margin-top: 20px;
-}
+
 
 /* HORIZONTAL LAYOUT */
 @media screen and (orientation: landscape) {
@@ -324,33 +321,46 @@ h1 {
 
     .stats-bar {
         flex-direction: column;
-        width: 80px;
+        width: 60px;
         height: 100%;
         justify-content: center;
-        gap: 30px;
+        gap: 15px;
+        padding: 5px;
         border-bottom: none;
         border-right: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     #game-container {
         flex: 1;
+        padding: 5px;
     }
 
     .controls-bar {
         flex-direction: column;
-        width: 80px;
+        width: 65px;
         height: 100%;
-        padding: 10px;
+        padding: 5px;
         border-top: none;
         border-left: 1px solid rgba(255, 255, 255, 0.1);
     }
 
+    .mobile-btn {
+        min-width: 40px;
+        height: 40px;
+    }
+
+    .btn-label {
+        font-size: 0.5rem;
+    }
+
     .nav-group {
         flex-direction: column;
+        gap: 5px;
     }
 
     .stat-actions {
         flex-direction: column;
+        gap: 5px;
     }
 }
 
