@@ -84,10 +84,74 @@ export default class SokobanParser {
         let maxWidth = 0;
         gridLines.forEach(l => maxWidth = Math.max(maxWidth, l.length));
 
-        return gridLines.map(line => {
+        const normalizedLines = gridLines.map(line => {
             // Replace '-' with ' ' (floor)
             let normalized = line.replace(/-/g, ' ');
             return normalized.padEnd(maxWidth, ' ');
+        });
+
+        return this.cleanOuterFloor(normalizedLines);
+    }
+
+    /**
+     * Converts floor tiles unreachable by the player into walls.
+     */
+    static cleanOuterFloor(grid) {
+        const height = grid.length;
+        if (height === 0) return grid;
+        const width = grid[0].length;
+
+        const interior = Array.from({ length: height }, () => Array(width).fill(false));
+
+        // Find player position
+        let start = null;
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+                const char = grid[y][x];
+                // Use standard chars for player
+                if (char === '@' || char === '+') {
+                    start = { x, y };
+                    break;
+                }
+            }
+            if (start) break;
+        }
+
+        if (!start) return grid;
+
+        // Flood fill (BFS) from player
+        const queue = [start];
+        interior[start.y][start.x] = true;
+
+        const offsets = [
+            { dx: 0, dy: -1 }, { dx: 0, dy: 1 },
+            { dx: -1, dy: 0 }, { dx: 1, dy: 0 }
+        ];
+
+        while (queue.length > 0) {
+            const { x, y } = queue.shift();
+
+            for (const offset of offsets) {
+                const nx = x + offset.dx;
+                const ny = y + offset.dy;
+
+                if (nx >= 0 && nx < width && ny >= 0 && ny < height &&
+                    !interior[ny][nx] && grid[ny][nx] !== '#') {
+                    interior[ny][nx] = true;
+                    queue.push({ x: nx, y: ny });
+                }
+            }
+        }
+
+        // Convert untouchable floor to wall
+        return grid.map((row, y) => {
+            return row.split('').map((char, x) => {
+                // If it's a space and not marked interior, it's outer/void space
+                if (char === ' ' && !interior[y][x]) {
+                    return '#';
+                }
+                return char;
+            }).join('');
         });
     }
 }
