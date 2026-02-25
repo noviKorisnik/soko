@@ -12,7 +12,10 @@ const ASSETS = [
     './js/game.js',
     './js/parser.js',
     './js/repeater.js',
-    './resources/soko.png'
+    './resources/soko.png',
+    './resources/Our-Original-Levels.txt',
+    './resources/Thinking-Rabbit-Original-Plus-Extra.txt',
+    './resources/Junior-1.txt'
 ];
 
 self.addEventListener('install', (event) => {
