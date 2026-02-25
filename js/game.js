@@ -185,15 +185,11 @@ export default class SokobanGame {
     }
 
     move(dx, dy) {
-        if (this.isCompleted) return;
+        if (this.isCompleted) return false;
 
         // Rotation translation: If the board is rotated on screen, 
         // we must translate the input direction accordingly.
         if (this.isViewRotated) {
-            // Screen Up (0, -1) -> Grid (1, 0) Right
-            // Screen Down (0, 1) -> Grid (-1, 0) Left
-            // Screen Left (-1, 0) -> Grid (0, -1) Up
-            // Screen Right (1, 0) -> Grid (0, 1) Down
             const oldDx = dx;
             dx = -dy;
             dy = oldDx;
@@ -203,12 +199,12 @@ export default class SokobanGame {
         const newY = this.playerPos.y + dy;
 
         // Check bounds (though levels are surrounded by walls)
-        if (newY < 0 || newY >= this.grid.length || newX < 0 || newX >= this.grid[newY].length) return;
+        if (newY < 0 || newY >= this.grid.length || newX < 0 || newX >= this.grid[newY].length) return false;
 
         const targetChar = this.grid[newY][newX];
 
         // 1. Wall
-        if (targetChar === this.CELL_TYPES.WALL) return;
+        if (targetChar === this.CELL_TYPES.WALL) return false;
 
         // 2. Box or Box on Target
         if (targetChar === this.CELL_TYPES.BOX || targetChar === this.CELL_TYPES.BOX_ON_TARGET) {
@@ -237,9 +233,9 @@ export default class SokobanGame {
                 this.updateStats();
                 this.render();
                 this.checkWin();
-                return;
+                return true;
             } else {
-                return; // Cant push
+                return false; // Cant push
             }
         }
 
@@ -251,8 +247,10 @@ export default class SokobanGame {
             this.saveState();
             this.updateStats();
             this.render();
-            return;
+            return true;
         }
+
+        return false;
     }
 
     executePlayerMove(newX, newY) {
@@ -281,7 +279,7 @@ export default class SokobanGame {
     }
 
     undo() {
-        if (this.history.length === 0) return;
+        if (this.history.length === 0) return false;
 
         const lastMove = this.history.slice(-1);
         this.history = this.history.slice(0, -1);
@@ -338,6 +336,7 @@ export default class SokobanGame {
         this.saveState();
         this.updateStats();
         this.render();
+        return true;
     }
 
     reset() {

@@ -19,6 +19,15 @@ const COLLECTIONS = [
         STRIP_OUTER_WALLS: true,
         AUTO_ROTATE: true,
         AUTO_ADJUST_SIZE: true
+    },
+    {
+        ID: 'junior1',
+        LEVEL_FILE: 'resources/Junior-1.txt',
+        STORAGE_PREFIX: 'soko_junior1',
+        COLLECTION_NAME: 'Junior Edition 1',
+        STRIP_OUTER_WALLS: true,
+        AUTO_ROTATE: true,
+        AUTO_ADJUST_SIZE: true
     }
 ];
 

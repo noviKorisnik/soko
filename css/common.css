@@ -96,6 +96,11 @@ h3 {
     width: 100%;
 }
 
+.primary-btn,
+.secondary-btn {
+    touch-action: none;
+}
+
 .is-desktop .modal-actions {
     flex-direction: row;
     justify-content: center;
