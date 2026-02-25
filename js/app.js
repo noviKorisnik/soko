@@ -1,6 +1,7 @@
 import CONFIG from './config.js';
 import SokobanGame from './game.js';
 import SokobanParser from './parser.js';
+import ActionRepeater from './repeater.js';
 
 /**
  * Unified Game Controller
@@ -138,30 +139,116 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    if (isMobile || 'ontouchstart' in window) {
-        let touchStartX = 0, touchStartY = 0;
-        const swipeThreshold = 30;
-        board.addEventListener('touchstart', (e) => {
-            touchStartX = e.changedTouches[0].screenX;
-            touchStartY = e.changedTouches[0].screenY;
-            if (e.target === board || board.contains(e.target)) e.preventDefault();
-        }, { passive: false });
+    // --- INPUT REPEAT ENGINE ---
+    const moveRepeater = new ActionRepeater(() => {
+        if (moveDirection.dx !== 0 || moveDirection.dy !== 0) {
+            return game.move(moveDirection.dx, moveDirection.dy);
+        }
+        return false;
+    });
 
-        board.addEventListener('touchend', (e) => {
-            const dx = e.changedTouches[0].screenX - touchStartX;
-            const dy = e.changedTouches[0].screenY - touchStartY;
-            if (Math.abs(dx) > Math.abs(dy)) {
-                if (Math.abs(dx) > swipeThreshold) game.move(dx > 0 ? 1 : -1, 0);
-            } else {
-                if (Math.abs(dy) > swipeThreshold) game.move(0, dy > 0 ? 1 : -1);
-            }
-        }, { passive: false });
-    }
+    const undoRepeater = new ActionRepeater(() => {
+        const success = game.undo();
+        hideOverlay();
+        return success;
+    }, 300, 60); // Faster repeat for rapid undo
 
-    if (ui.undo) ui.undo.onclick = () => { game.undo(); hideOverlay(); };
+    let moveDirection = { dx: 0, dy: 0 };
+    let activePointers = new Map();
+
+    // Prevent context menu on board to allow Right-Click Undo shortcut on Desktop
+    board.addEventListener('contextmenu', e => e.preventDefault());
+
+    // --- REPEATABLE BUTTONS ---
+    const attachRepeaterToButton = (btn, action) => {
+        if (!btn) return;
+        const repeater = new ActionRepeater(() => {
+            const success = action();
+            hideOverlay();
+            return success;
+        });
+
+        btn.addEventListener('pointerdown', (e) => {
+            if (e.button !== 0) return; // Only left-click
+            btn.setPointerCapture(e.pointerId);
+            repeater.start();
+        });
+        const stop = () => repeater.stop();
+        btn.addEventListener('pointerup', stop);
+        btn.addEventListener('pointercancel', stop);
+        btn.addEventListener('pointerleave', stop);
+    };
+
+    attachRepeaterToButton(ui.undo, () => game.undo());
+    attachRepeaterToButton(ui.prev, () => game.loadLevel(game.currentLevelIndex - 1));
+    attachRepeaterToButton(ui.next, () => game.loadLevel(game.currentLevelIndex + 1));
+
+    // Reset remains single-click
     if (ui.reset) ui.reset.onclick = () => { game.reset(); hideOverlay(); };
-    if (ui.prev) ui.prev.onclick = () => { game.loadLevel(game.currentLevelIndex - 1); };
-    if (ui.next) ui.next.onclick = () => { game.loadLevel(game.currentLevelIndex + 1); };
+
+    // --- GESTURES & MOVEMENT (Pointer Events) ---
+    const swipeThreshold = 30;
+    let swipeOrigin = null;
+
+    board.addEventListener('pointerdown', (e) => {
+        activePointers.set(e.pointerId, { x: e.screenX, y: e.screenY, button: e.button });
+        board.setPointerCapture(e.pointerId);
+
+        // 1. Check for Rapid Undo Shortcut: 2-fingers OR Right-Click
+        const isRightClick = (e.button === 2);
+        const isTwoFingers = (activePointers.size >= 2);
+
+        if (isRightClick || isTwoFingers) {
+            moveRepeater.stop(); // Stop any active movement
+            undoRepeater.start();
+        } else if (activePointers.size === 1) {
+            // Start of a potential swipe / single-finger movement
+            swipeOrigin = { x: e.screenX, y: e.screenY };
+        }
+    });
+
+    board.addEventListener('pointermove', (e) => {
+        if (!activePointers.has(e.pointerId)) return;
+        activePointers.get(e.pointerId).x = e.screenX;
+        activePointers.get(e.pointerId).y = e.screenY;
+
+        // Skip swipe logic if we are already in Undo mode
+        if (undoRepeater.isActive) return;
+
+        // Swipe / Glide Motion Detection
+        if (swipeOrigin && !moveRepeater.isActive) {
+            const dx = e.screenX - swipeOrigin.x;
+            const dy = e.screenY - swipeOrigin.y;
+
+            if (Math.abs(dx) > swipeThreshold || Math.abs(dy) > swipeThreshold) {
+                if (Math.abs(dx) > Math.abs(dy)) {
+                    moveDirection = { dx: dx > 0 ? 1 : -1, dy: 0 };
+                } else {
+                    moveDirection = { dx: 0, dy: dy > 0 ? 1 : -1 };
+                }
+                moveRepeater.start();
+            }
+        }
+    });
+
+    const handlePointerUp = (e) => {
+        activePointers.delete(e.pointerId);
+
+        // Evaluate if Rapid Undo should still be active
+        const hasRightClickActive = Array.from(activePointers.values()).some(p => p.button === 2);
+        if (activePointers.size < 2 && !hasRightClickActive) {
+            undoRepeater.stop();
+        }
+
+        if (activePointers.size === 0) {
+            moveRepeater.stop();
+            swipeOrigin = null;
+            moveDirection = { dx: 0, dy: 0 };
+        }
+    };
+
+    board.addEventListener('pointerup', handlePointerUp);
+    board.addEventListener('pointercancel', handlePointerUp);
 
     nextLevelBtn.onclick = () => { game.loadLevel(game.currentLevelIndex + 1); };
     cancelBtn.onclick = hideOverlay;
