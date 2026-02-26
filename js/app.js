@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const closeSettingsBtn = document.getElementById('close-settings-btn');
     const editionList = document.getElementById('edition-list');
 
-    const toggleFullscreenBtn = document.getElementById('toggle-fullscreen-btn');
+    const toggleFullscreenBtn = document.getElementById(`fullscreen-btn-${suffix}`);
 
     // Platforms UI Actions
     if (helpBtn) helpBtn.onclick = () => aboutModal.classList.remove('hidden');
@@ -52,7 +52,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Fullscreen Logic
     const supportsFullscreen = !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen);
     if (supportsFullscreen && toggleFullscreenBtn) {
-        toggleFullscreenBtn.style.display = 'block';
         toggleFullscreenBtn.onclick = () => {
             if (!document.fullscreenElement && !document.webkitFullscreenElement) {
                 const req = document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen;
@@ -226,12 +225,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         // If clicking on a button or modal, don't start a swipe
         if (e.target.closest('button') || e.target.closest('.overlay-content')) return;
 
-        // Auto-request fullscreen on first interaction if possible and not already in it
-        if (supportsFullscreen && !document.fullscreenElement && !document.webkitFullscreenElement) {
-            const req = document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen;
-            req.call(document.documentElement).catch(() => { }); // Fail silently
-        }
-
         activePointers.set(e.pointerId, { x: e.screenX, y: e.screenY, button: e.button });
         gameContainer.setPointerCapture(e.pointerId);
 
@@ -344,14 +337,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Initialize UI
         updateUIState();
         document.body.classList.add('ready');
-
-        // Fade out splash screen
-        const splash = document.getElementById('splash-screen');
-        if (splash) {
-            setTimeout(() => {
-                splash.classList.add('fade-out');
-            }, 800); // Show splash for at least 800ms
-        }
 
         // Dynamic Versioning from Service Worker
         fetch('sw.js').then(r => r.text()).then(text => {

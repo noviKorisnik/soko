@@ -1,5 +1,5 @@
 export default class ActionRepeater {
-    constructor(actionCallback, initialDelay = 500, repeatInterval = 150) {
+    constructor(actionCallback, initialDelay = 400, repeatInterval = 110) {
         this.actionCallback = actionCallback;
         this.initialDelay = initialDelay;
         this.repeatInterval = repeatInterval;
