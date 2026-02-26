@@ -1,4 +1,4 @@
-const CACHE_NAME = 'soko-v1.7';
+const CACHE_NAME = 'soko-v1.8';
 const ASSETS = [
     './',
     './index.html',
