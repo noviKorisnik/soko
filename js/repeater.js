@@ -23,15 +23,13 @@ export default class ActionRepeater {
     }
 
     run() {
+        // 1. check if active - if not - end
         if (!this.isActive) return;
 
-        const result = this.actionCallback();
-        if (result === false) {
-            this.stop();
-            return;
-        }
+        // 2. move
+        this.actionCallback();
 
-        // Recursive call for the next repeat
+        // 3. set timeout for new call (without check)
         this.timer = setTimeout(() => this.run(), this.repeatInterval);
     }
 
