@@ -37,6 +37,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const closeSettingsBtn = document.getElementById('close-settings-btn');
     const editionList = document.getElementById('edition-list');
 
+    const toggleFullscreenBtn = document.getElementById('toggle-fullscreen-btn');
+
     // Platforms UI Actions
     if (helpBtn) helpBtn.onclick = () => aboutModal.classList.remove('hidden');
     if (closeAboutBtn) closeAboutBtn.onclick = () => aboutModal.classList.add('hidden');
@@ -46,6 +48,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         settingsModal.classList.remove('hidden');
     };
     if (closeSettingsBtn) closeSettingsBtn.onclick = () => settingsModal.classList.add('hidden');
+
+    // Fullscreen Logic
+    const supportsFullscreen = !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen);
+    if (supportsFullscreen && toggleFullscreenBtn) {
+        toggleFullscreenBtn.style.display = 'block';
+        toggleFullscreenBtn.onclick = () => {
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                const req = document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen;
+                req.call(document.documentElement).catch(err => console.log("Fullscreen failed", err));
+            } else {
+                const exit = document.exitFullscreen || document.webkitExitFullscreen;
+                exit.call(document).catch(err => console.log("Exit failed", err));
+            }
+        };
+    }
 
     const renderEditionList = () => {
         editionList.innerHTML = '';
@@ -119,8 +136,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (game.isCompleted) {
             // Reverted per user request: PageUp for Next (level UP), PageDown for Prev (level DOWN)
-            if (e.key === 'PageUp' || (e.altKey && e.key === 'ArrowRight')) ui.next?.click();
-            else if (e.key === 'PageDown' || (e.altKey && e.key === 'ArrowLeft')) ui.prev?.click();
+            if (e.key === 'PageUp' || (e.altKey && e.key === 'ArrowRight')) updateLevelBy(1);
+            else if (e.key === 'PageDown' || (e.altKey && e.key === 'ArrowLeft')) updateLevelBy(-1);
             else if (e.key === 'r' || e.key === 'R' || e.key === 'Delete') { game.reset(); hideOverlay(); }
             else if (e.key === 'z' || e.key === 'Z' || e.key === 'Backspace') { game.undo(); hideOverlay(); }
             return;
@@ -128,8 +145,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'PageUp', 'PageDown'].includes(e.key)) e.preventDefault();
 
-        if (e.key === 'PageUp' || (e.altKey && e.key === 'ArrowRight')) { ui.next?.click(); return; }
-        if (e.key === 'PageDown' || (e.altKey && e.key === 'ArrowLeft')) { ui.prev?.click(); return; }
+        if (e.key === 'PageUp' || (e.altKey && e.key === 'ArrowRight')) { updateLevelBy(1); return; }
+        if (e.key === 'PageDown' || (e.altKey && e.key === 'ArrowLeft')) { updateLevelBy(-1); return; }
 
         switch (e.key) {
             case 'ArrowUp': case 'w': case 'W': game.move(0, -1); break;
@@ -194,8 +211,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         btn.addEventListener('pointerleave', stop);
     };
 
-    if (ui.prev) ui.prev.onclick = () => updateLevelBy(-1);
-    if (ui.next) ui.next.onclick = () => updateLevelBy(1);
     attachRepeaterToButton(ui.undo, () => game.undo());
     attachRepeaterToButton(ui.prev, () => updateLevelBy(-1));
     attachRepeaterToButton(ui.next, () => updateLevelBy(1));
@@ -210,6 +225,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     gameContainer.addEventListener('pointerdown', (e) => {
         // If clicking on a button or modal, don't start a swipe
         if (e.target.closest('button') || e.target.closest('.overlay-content')) return;
+
+        // Auto-request fullscreen on first interaction if possible and not already in it
+        if (supportsFullscreen && !document.fullscreenElement && !document.webkitFullscreenElement) {
+            const req = document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen;
+            req.call(document.documentElement).catch(() => { }); // Fail silently
+        }
 
         activePointers.set(e.pointerId, { x: e.screenX, y: e.screenY, button: e.button });
         gameContainer.setPointerCapture(e.pointerId);
@@ -320,7 +341,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         const response = await fetch(CONFIG.LEVEL_FILE);
         game.setLevels(SokobanParser.parse(await response.text()));
         game.loadLevel(parseInt(localStorage.getItem(`${CONFIG.STORAGE_PREFIX}_current_level`)) || 0);
+        // Initialize UI
         updateUIState();
+        document.body.classList.add('ready');
+
+        // Fade out splash screen
+        const splash = document.getElementById('splash-screen');
+        if (splash) {
+            setTimeout(() => {
+                splash.classList.add('fade-out');
+            }, 800); // Show splash for at least 800ms
+        }
 
         // Dynamic Versioning from Service Worker
         fetch('sw.js').then(r => r.text()).then(text => {

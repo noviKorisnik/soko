@@ -1,14 +1,9 @@
-/**
- * Reusable engine for repeating actions while an input is held.
- * Mimics native keyboard key-repeat behavior.
- */
 export default class ActionRepeater {
-    constructor(actionCallback, initialDelay = 400, repeatInterval = 80) {
+    constructor(actionCallback, initialDelay = 500, repeatInterval = 150) {
         this.actionCallback = actionCallback;
         this.initialDelay = initialDelay;
         this.repeatInterval = repeatInterval;
-        this.timeoutTimer = null;
-        this.intervalTimer = null;
+        this.timer = null;
         this.isActive = false;
     }
 
@@ -16,37 +11,35 @@ export default class ActionRepeater {
         if (this.isActive) return;
         this.isActive = true;
 
-        const shouldContinue = this.actionCallback();
-        if (shouldContinue === false) {
+        // First action is immediate
+        const result = this.actionCallback();
+        if (result === false) {
             this.stop();
             return;
         }
 
-        this.timeoutTimer = setTimeout(() => {
-            if (!this.isActive) return;
+        // Schedule first repeat after the long delay
+        this.timer = setTimeout(() => this.run(), this.initialDelay);
+    }
 
-            this.intervalTimer = setInterval(() => {
-                if (!this.isActive) {
-                    this.stop();
-                    return;
-                }
-                const stillContinue = this.actionCallback();
-                if (stillContinue === false) {
-                    this.stop();
-                }
-            }, this.repeatInterval);
-        }, this.initialDelay);
+    run() {
+        if (!this.isActive) return;
+
+        const result = this.actionCallback();
+        if (result === false) {
+            this.stop();
+            return;
+        }
+
+        // Recursive call for the next repeat
+        this.timer = setTimeout(() => this.run(), this.repeatInterval);
     }
 
     stop() {
         this.isActive = false;
-        if (this.timeoutTimer) {
-            clearTimeout(this.timeoutTimer);
-            this.timeoutTimer = null;
-        }
-        if (this.intervalTimer) {
-            clearInterval(this.intervalTimer);
-            this.intervalTimer = null;
+        if (this.timer) {
+            clearTimeout(this.timer);
+            this.timer = null;
         }
     }
 }

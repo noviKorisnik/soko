@@ -1,8 +1,9 @@
-const CACHE_NAME = 'soko-v1.5';
+const CACHE_NAME = 'soko-v1.6';
 const ASSETS = [
     './',
     './index.html',
     './manifest.json',
+    './resources/splash.png',
     './favicon.svg',
     './css/common.css',
     './css/desktop.css',

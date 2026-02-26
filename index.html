@@ -68,6 +68,12 @@
 </head>
 
 <body>
+    <div id="splash-screen">
+        <div class="splash-content">
+            <img src="resources/splash.png" alt="Soko Splash">
+            <div class="splash-loader"></div>
+        </div>
+    </div>
     <div id="app">
         <!-- HEADER section -->
         <header class="desktop-only">
@@ -177,6 +183,10 @@
                     <div id="edition-list">
                         <!-- Populated dynamiclly -->
                     </div>
+                    <button id="toggle-fullscreen-btn" class="secondary-btn"
+                        style="width: 100%; margin-top: 15px; display: none;">
+                        ⛶ Full Screen
+                    </button>
                     <button id="close-settings-btn" class="secondary-btn" style="width: 100%;">Cancel</button>
                 </div>
             </div>
