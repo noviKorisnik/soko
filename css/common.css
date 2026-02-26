@@ -1,7 +1,36 @@
 /* Shared styles for both Desktop and Mobile */
 
-/* Transition safety / Hide until loaded */
+:root {
+    --bg-color: #0f172a;
+    --card-bg: #1e293b;
+    --accent-color: #38bdf8;
+    --accent-glow: rgba(56, 189, 248, 0.4);
+    --text-color: #f1f5f9;
+    --text-muted: #94a3b8;
+
+    /* Game Element Colors */
+    --wall-color: #475569;
+    --floor-color: #1e293b;
+    --target-color: #64748b;
+    --box-color: #f59e0b;
+    --box-target-color: #10b981;
+    --player-color: #38bdf8;
+
+    /* Scalable dimensions */
+    --board-border: calc(var(--cell-size) / 4);
+    --gap: 1.5px;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
 body {
+    font-family: 'Outfit', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
     opacity: 0;
     transition: opacity 0.2s ease;
 }
@@ -101,6 +130,12 @@ h3 {
     touch-action: none;
 }
 
+/* Ensure buttons in modals are separated from content */
+.overlay-content .primary-btn,
+.overlay-content .secondary-btn {
+    margin-top: 25px;
+}
+
 .is-desktop .modal-actions {
     flex-direction: row;
     justify-content: center;
@@ -112,15 +147,176 @@ h3 {
     margin-left: 20px;
 }
 
-/* Z-Index Registry */
-#completed-badge {
-    z-index: 100;
-    /* Above the game board */
-}
+/* Z-Index Registry managed at the end of each element block */
 
 #message-overlay,
 #about-modal,
 #settings-modal {
     z-index: 300 !important;
     /* Top layer */
+}
+
+/* --- CORE GAME ELEMENTS --- */
+#board {
+    display: grid;
+    gap: var(--gap, 1px);
+    background-color: #020617;
+    border: var(--board-border) solid var(--wall-color);
+    border-radius: 8px;
+    outline: 1px solid rgba(255, 255, 255, 0.08);
+    outline-offset: -1px;
+    box-shadow:
+        0 0 40px rgba(0, 0, 0, 0.6),
+        0 0 0 1px rgba(0, 0, 0, 0.4),
+        inset 0 0 25px rgba(0, 0, 0, 0.7),
+        inset 0 0 0 1px rgba(0, 0, 0, 0.5);
+    transition: transform 0.3s ease;
+}
+
+.cell {
+    width: var(--cell-size);
+    height: var(--cell-size);
+    border-radius: 4px;
+    position: relative;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.wall {
+    background-color: var(--wall-color);
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.floor {
+    background-color: var(--floor-color);
+}
+
+.target::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 8px;
+    height: 8px;
+    background-color: var(--target-color);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 5px var(--target-color);
+    z-index: 5;
+}
+
+.box {
+    background-color: var(--box-color);
+    border: calc(var(--cell-size) / 40) solid rgba(0, 0, 0, 0.2);
+    border-radius: calc(var(--cell-size) / 10);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow:
+        0 calc(var(--cell-size) / 12) calc(var(--cell-size) / 5) rgba(0, 0, 0, 0.4),
+        inset 0 calc(var(--cell-size) / 50) calc(var(--cell-size) / 50) rgba(255, 255, 255, 0.2);
+    z-index: 10;
+    transform: scale(0.9);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Scalable Geometric Symbol (The "X" Bracing) */
+.box::before {
+    content: '';
+    position: absolute;
+    top: 15%;
+    left: 15%;
+    right: 15%;
+    bottom: 15%;
+    border: calc(var(--cell-size) / 30) solid rgba(0, 0, 0, 0.1);
+    background:
+        linear-gradient(45deg, transparent 47%, rgba(0, 0, 0, 0.15) 47%, rgba(0, 0, 0, 0.15) 53%, transparent 53%),
+        linear-gradient(-45deg, transparent 47%, rgba(0, 0, 0, 0.15) 47%, rgba(0, 0, 0, 0.15) 53%, transparent 53%);
+    pointer-events: none;
+}
+
+.box-on-target {
+    background-color: var(--box-target-color);
+    box-shadow:
+        0 0 calc(var(--cell-size) / 3) rgba(16, 185, 129, 0.5),
+        inset 0 calc(var(--cell-size) / 50) calc(var(--cell-size) / 50) rgba(255, 255, 255, 0.3);
+}
+
+.box-on-target::before {
+    border-color: rgba(255, 255, 255, 0.2);
+    background:
+        linear-gradient(45deg, transparent 47%, rgba(255, 255, 255, 0.3) 47%, rgba(255, 255, 255, 0.3) 53%, transparent 53%),
+        linear-gradient(-45deg, transparent 47%, rgba(255, 255, 255, 0.3) 47%, rgba(255, 255, 255, 0.3) 53%, transparent 53%);
+}
+
+.cell.player {
+    background-color: rgba(56, 189, 248, 0.85);
+    border-radius: 50%;
+    box-shadow: 0 0 15px var(--accent-glow);
+    z-index: 3;
+    transform: scale(0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation: pulse 0.833s infinite ease-in-out;
+}
+
+.cell.player::after {
+    content: '';
+    width: 45%;
+    height: 45%;
+    background-color: rgba(255, 255, 255, 0.6);
+    border-radius: 50%;
+    box-shadow: 0 0 10px white;
+}
+
+.target .cell.player {
+    background-color: rgba(56, 189, 248, 0.5);
+    box-shadow: 0 0 25px rgba(16, 185, 129, 0.8);
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        transform: scale(0.8);
+        box-shadow: 0 0 10px var(--accent-glow);
+    }
+
+    50% {
+        transform: scale(0.95);
+        box-shadow: 0 0 20px var(--accent-glow);
+    }
+}
+
+.level-solved #board {
+    filter: grayscale(0.5) contrast(0.8);
+    opacity: 0.7;
+}
+
+/* Completed Badge (Shared logic) */
+#completed-badge {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: var(--box-target-color);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+    pointer-events: none;
+    z-index: 105;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+#completed-badge.show {
+    opacity: 1;
+    transform: translateY(0);
 }
