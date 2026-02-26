@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // UI Elements
     const board = document.getElementById('board');
+    const gameContainer = document.getElementById('game-container');
     const stats = {
         moves: document.getElementById(`moves-count-${suffix}`),
         pushes: document.getElementById(`pushes-count-${suffix}`),
@@ -117,6 +118,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         if (game.isCompleted) {
+            // Reverted per user request: PageUp for Next (level UP), PageDown for Prev (level DOWN)
             if (e.key === 'PageUp' || (e.altKey && e.key === 'ArrowRight')) ui.next?.click();
             else if (e.key === 'PageDown' || (e.altKey && e.key === 'ArrowLeft')) ui.prev?.click();
             else if (e.key === 'r' || e.key === 'R' || e.key === 'Delete') { game.reset(); hideOverlay(); }
@@ -139,6 +141,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
+    const updateLevelBy = (delta) => {
+        const nextIdx = game.currentLevelIndex + delta;
+        if (nextIdx >= 0 && nextIdx < game.levels.length) {
+            // Check lockout for forward movement
+            if (delta > 0) {
+                const nextPossible = (game.currentLevelIndex < game.highestCompletedLevel || game.isCompleted);
+                if (nextPossible) game.loadLevel(nextIdx);
+            } else {
+                game.loadLevel(nextIdx);
+            }
+        }
+    };
+
     // --- INPUT REPEAT ENGINE ---
     const moveRepeater = new ActionRepeater(() => {
         if (moveDirection.dx !== 0 || moveDirection.dy !== 0) {
@@ -157,7 +172,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let activePointers = new Map();
 
     // Prevent context menu on board to allow Right-Click Undo shortcut on Desktop
-    board.addEventListener('contextmenu', e => e.preventDefault());
+    gameContainer.addEventListener('contextmenu', e => e.preventDefault());
 
     // --- REPEATABLE BUTTONS ---
     const attachRepeaterToButton = (btn, action) => {
@@ -179,9 +194,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         btn.addEventListener('pointerleave', stop);
     };
 
+    if (ui.prev) ui.prev.onclick = () => updateLevelBy(-1);
+    if (ui.next) ui.next.onclick = () => updateLevelBy(1);
     attachRepeaterToButton(ui.undo, () => game.undo());
-    attachRepeaterToButton(ui.prev, () => game.loadLevel(game.currentLevelIndex - 1));
-    attachRepeaterToButton(ui.next, () => game.loadLevel(game.currentLevelIndex + 1));
+    attachRepeaterToButton(ui.prev, () => updateLevelBy(-1));
+    attachRepeaterToButton(ui.next, () => updateLevelBy(1));
 
     // Reset remains single-click
     if (ui.reset) ui.reset.onclick = () => { game.reset(); hideOverlay(); };
@@ -190,9 +207,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     const swipeThreshold = 30;
     let swipeOrigin = null;
 
-    board.addEventListener('pointerdown', (e) => {
+    gameContainer.addEventListener('pointerdown', (e) => {
+        // If clicking on a button or modal, don't start a swipe
+        if (e.target.closest('button') || e.target.closest('.overlay-content')) return;
+
         activePointers.set(e.pointerId, { x: e.screenX, y: e.screenY, button: e.button });
-        board.setPointerCapture(e.pointerId);
+        gameContainer.setPointerCapture(e.pointerId);
 
         // 1. Check for Rapid Undo Shortcut: 2-fingers OR Right-Click
         const isRightClick = (e.button === 2);
@@ -207,7 +227,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    board.addEventListener('pointermove', (e) => {
+    gameContainer.addEventListener('pointermove', (e) => {
         if (!activePointers.has(e.pointerId)) return;
         activePointers.get(e.pointerId).x = e.screenX;
         activePointers.get(e.pointerId).y = e.screenY;
@@ -215,18 +235,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Skip swipe logic if we are already in Undo mode
         if (undoRepeater.isActive) return;
 
-        // Swipe / Glide Motion Detection
-        if (swipeOrigin && !moveRepeater.isActive) {
+        // Swipe / Glide Motion / Steering Detection
+        if (swipeOrigin) {
             const dx = e.screenX - swipeOrigin.x;
             const dy = e.screenY - swipeOrigin.y;
 
             if (Math.abs(dx) > swipeThreshold || Math.abs(dy) > swipeThreshold) {
+                let nextDir;
                 if (Math.abs(dx) > Math.abs(dy)) {
-                    moveDirection = { dx: dx > 0 ? 1 : -1, dy: 0 };
+                    nextDir = { dx: dx > 0 ? 1 : -1, dy: 0 };
                 } else {
-                    moveDirection = { dx: 0, dy: dy > 0 ? 1 : -1 };
+                    nextDir = { dx: 0, dy: dy > 0 ? 1 : -1 };
                 }
-                moveRepeater.start();
+
+                // If direction changed (Steering), update it and reset origin to current point
+                if (nextDir.dx !== moveDirection.dx || nextDir.dy !== moveDirection.dy) {
+                    moveDirection = nextDir;
+                    swipeOrigin = { x: e.screenX, y: e.screenY }; // Pivot point for next steering
+
+                    if (!moveRepeater.isActive) {
+                        moveRepeater.start();
+                    }
+                }
             }
         }
     });
@@ -247,8 +277,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
 
-    board.addEventListener('pointerup', handlePointerUp);
-    board.addEventListener('pointercancel', handlePointerUp);
+    gameContainer.addEventListener('pointerup', handlePointerUp);
+    gameContainer.addEventListener('pointercancel', handlePointerUp);
 
     nextLevelBtn.onclick = () => { game.loadLevel(game.currentLevelIndex + 1); };
     cancelBtn.onclick = hideOverlay;

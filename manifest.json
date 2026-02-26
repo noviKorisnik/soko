@@ -3,10 +3,10 @@
   "short_name": "Soko",
   "description": "Soko is a modern Sokoban puzzle game. Push boxes. Plan ahead. See the solution.",
   "start_url": ".",
-  "display": "standalone",
+  "display": "fullscreen",
   "background_color": "#0f1b2d",
   "theme_color": "#0f1b2d",
-  "orientation": "portrait",
+  "orientation": "any",
   "icons": [
     {
       "src": "favicon.svg",

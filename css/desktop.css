@@ -1,33 +1,9 @@
 :root {
-    --bg-color: #0f172a;
-    --card-bg: #1e293b;
-    --accent-color: #38bdf8;
-    --accent-glow: rgba(56, 189, 248, 0.4);
-    --text-color: #f1f5f9;
-    --text-muted: #94a3b8;
-
-    /* Game Element Colors */
-    --wall-color: #334155;
-    --floor-color: #1e293b;
-    --target-color: #64748b;
-    --box-color: #f59e0b;
-    --box-target-color: #10b981;
-    --player-color: #38bdf8;
-
     --cell-size: 40px;
     --gap: 2px;
 }
 
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-
 body {
-    font-family: 'Outfit', sans-serif;
-    background-color: var(--bg-color);
-    color: var(--text-color);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -97,74 +73,16 @@ h1 {
     overflow: auto;
     border: 1px solid rgba(255, 255, 255, 0.05);
     box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
-}
-
-#board {
-    display: grid;
-    gap: var(--gap);
-    padding: 20px;
+    touch-action: none;
+    -webkit-user-select: none;
     user-select: none;
 }
 
-/* Cell Types */
-.cell {
-    width: var(--cell-size);
-    height: var(--cell-size);
-    border-radius: 4px;
-    position: relative;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
+/* Board layout handled by common.css */
 
-.wall {
-    background-color: var(--wall-color);
-    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-}
+/* Board layout handled by common.css */
 
-.floor {
-    background-color: var(--floor-color);
-}
-
-.target::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 8px;
-    height: 8px;
-    background-color: var(--target-color);
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-    box-shadow: 0 0 5px var(--target-color);
-    z-index: 5;
-    /* Ensure point is always visible on top */
-}
-
-.box {
-    background-color: var(--box-color);
-    border: 2px solid rgba(0, 0, 0, 0.1);
-    border-radius: 6px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
-    z-index: 10;
-    /* Higher than target dot (5) to hide it */
-}
-
-.box::before {
-    content: '✖';
-    color: rgba(0, 0, 0, 0.2);
-    font-size: 20px;
-}
-
-.box-on-target {
-    background-color: var(--box-target-color);
-}
-
-.box-on-target::before {
-    content: '✔';
-}
+/* Board layout specific to Desktop */
 
 
 /* UI Overlay - Updated to cover full page */
@@ -320,89 +238,6 @@ button:disabled,
     pointer-events: none;
 }
 
-/* Completed Badge */
-#completed-badge {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background: var(--box-target-color);
-    color: white;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
-    pointer-events: none;
-    z-index: 105;
-    opacity: 0;
-    transform: translateY(-10px);
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-#completed-badge.show {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-.level-solved #board {
-    filter: grayscale(0.5) contrast(0.8);
-    opacity: 0.7;
-}
-
-.level-solved .player {
-    animation: none;
-    box-shadow: none;
-    opacity: 0.8;
-}
-
-.player {
-    background-color: rgba(56, 189, 248, 0.85);
-    /* Semi-transparent */
-    border-radius: 50%;
-    box-shadow: 0 0 15px var(--accent-glow);
-    z-index: 3;
-    transform: scale(0.9);
-    animation: pulse 0.833s infinite ease-in-out;
-    /* 72 bpm = 1.2Hz = ~0.833s */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-@keyframes pulse {
-
-    0%,
-    100% {
-        transform: scale(0.8);
-        box-shadow: 0 0 10px var(--accent-glow);
-    }
-
-    50% {
-        transform: scale(0.95);
-        box-shadow: 0 0 20px var(--accent-glow);
-    }
-}
-
-.player::after {
-    content: '';
-    width: 45%;
-    /* Restored size for better visibility */
-    height: 45%;
-    background-color: rgba(255, 255, 255, 0.6);
-    border-radius: 50%;
-    box-shadow: 0 0 10px white;
-}
-
-/* Clear visual distinction when player is on a target field */
-.target .player {
-    background-color: rgba(56, 189, 248, 0.5);
-    box-shadow: 0 0 25px rgba(16, 185, 129, 0.8);
-    /* Strong green "Active" glow */
-}
-
-/* Response adjustments */
 @media (max-width: 800px) {
     footer {
         flex-direction: column;
