@@ -46,6 +46,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (settingsBtn) settingsBtn.onclick = async () => {
         openGroup = null; // reset to auto-detect on open
         await refreshCacheStatus();
+        frozenGrouping = null; // reset grouping on modal open
         renderCollectionManager();
         settingsModal.classList.remove('hidden');
     };
@@ -128,6 +129,24 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     let openGroup = null;     // which group key is expanded
     let expandedItem = null;  // which col.id is expanded inside group
+    let frozenGrouping = null; // Snapshot of which item belongs to which group
+
+    const performReGroup = () => {
+        const grouped = {};
+        GROUPS.forEach(g => grouped[g.key] = []);
+
+        CONFIG.COLLECTIONS.forEach(col => {
+            const group = getGroup(col, cacheStatusMap[col.id]);
+            grouped[group].push(col);
+        });
+
+        // Sort In Progress by % descending
+        grouped.inProgress.sort((a, b) =>
+            (getProgress(b) / b.levelCount) - (getProgress(a) / a.levelCount)
+        );
+
+        frozenGrouping = grouped;
+    };
 
     const renderCollectionManager = () => {
         const isLandscape = window.innerWidth > window.innerHeight;
@@ -147,19 +166,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         editionList.innerHTML = '';
         editionList.className = `cm-body ${isLandscape ? 'cm-landscape' : 'cm-portrait'}`;
 
-        // Group collections
-        const grouped = {};
-        GROUPS.forEach(g => grouped[g.key] = []);
+        // Ensure we have a grouping
+        if (!frozenGrouping) performReGroup();
 
+        // Calculate LIVE counters for headers
+        const liveCounters = {};
+        GROUPS.forEach(g => liveCounters[g.key] = 0);
         CONFIG.COLLECTIONS.forEach(col => {
-            const group = getGroup(col, cacheStatusMap[col.id]);
-            grouped[group].push(col);
+            const groupKey = getGroup(col, cacheStatusMap[col.id]);
+            liveCounters[groupKey]++;
         });
-
-        // Sort In Progress by % descending
-        grouped.inProgress.sort((a, b) =>
-            (getProgress(b) / b.levelCount) - (getProgress(a) / a.levelCount)
-        );
 
         // Auto-detect open group if not set
         if (!openGroup) {
@@ -168,13 +184,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         if (isLandscape) {
-            renderLandscapeCM(grouped);
+            renderLandscapeCM(frozenGrouping, liveCounters);
         } else {
-            renderPortraitCM(grouped);
+            renderPortraitCM(frozenGrouping, liveCounters);
         }
     };
 
-    const renderLandscapeCM = (grouped) => {
+    const renderLandscapeCM = (grouped, liveCounters) => {
         // Sidebar for groups, title, refresh, and close
         const sidebar = document.createElement('div');
         sidebar.className = 'cm-sidebar';
@@ -188,7 +204,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         refreshBtn.className = 'icon-btn cm-sidebar-refresh';
         refreshBtn.innerHTML = '↺';
         refreshBtn.title = 'Refresh grouping';
-        refreshBtn.onclick = () => renderCollectionManager();
+        refreshBtn.onclick = () => {
+            performReGroup();
+            renderCollectionManager();
+        };
         navHeader.appendChild(refreshBtn);
         sidebar.appendChild(navHeader);
 
@@ -200,10 +219,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             const items = grouped[key];
             const btn = document.createElement('button');
             btn.className = `cm-sidebar-btn ${openGroup === key ? 'active' : ''}`;
-            btn.disabled = items.length === 0;
-            btn.innerHTML = `<span>${label}</span><span class="cm-count">${items.length}</span>`;
+            btn.disabled = items.length === 0 && liveCounters[key] === 0;
+            btn.innerHTML = `<span>${label}</span><span class="cm-count">${liveCounters[key]}</span>`;
             btn.onclick = () => {
                 openGroup = key;
+                // If the user clicks into a previously empty group (visually), 
+                // we should regroup so they actually see items that moved there.
+                if (frozenGrouping[key].length === 0 && liveCounters[key] > 0) {
+                    performReGroup();
+                }
                 renderCollectionManager();
             };
             groupContainer.appendChild(btn);
@@ -230,7 +254,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         editionList.appendChild(content);
     };
 
-    const renderPortraitCM = (grouped) => {
+    const renderPortraitCM = (grouped, liveCounters) => {
         GROUPS.forEach(({ key, label }) => {
             const items = grouped[key];
             const isEmpty = items.length === 0;
@@ -238,12 +262,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // Group header
             const header = document.createElement('div');
-            header.className = `cm-group-header ${isOpen ? 'open' : ''} ${isEmpty ? 'disabled' : ''}`;
-            header.innerHTML = `<span>${label}</span><span class="cm-count">${items.length}</span>`;
+            header.className = `cm-group-header ${isOpen ? 'open' : ''} ${isEmpty && liveCounters[key] === 0 ? 'disabled' : ''}`;
+            header.innerHTML = `<span>${label}</span><span class="cm-count">${liveCounters[key]}</span>`;
 
-            if (!isEmpty) {
+            if (!isEmpty || liveCounters[key] > 0) {
                 header.onclick = () => {
+                    const wasEmptyVisually = items.length === 0;
                     openGroup = (openGroup === key) ? null : key;
+                    if (openGroup === key && wasEmptyVisually) {
+                        performReGroup();
+                    }
                     renderCollectionManager();
                 };
             }
