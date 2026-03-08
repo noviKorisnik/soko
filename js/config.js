@@ -22,6 +22,20 @@ const COLLECTIONS = [
         name: 'Junior Edition 1',
         description: 'A beginner-friendly set with 60 accessible puzzles. Great for learning the ropes.',
         levelCount: 60
+    },
+    {
+        id: 'junior2',
+        levelFile: 'resources/Junior-2.txt',
+        name: 'Junior Edition 2',
+        description: 'Take your skills to the next level with 54 more accessible puzzles.',
+        levelCount: 54
+    },
+    {
+        id: 'xsokoban',
+        levelFile: 'resources/Xsokoban.txt',
+        name: 'Xsokoban Rooms',
+        description: 'Classic levels from the original Xsokoban distribution. Ported for Soko.',
+        levelCount: 40
     }
 ];
 
