@@ -50,7 +50,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderCollectionManager();
         settingsModal.classList.remove('hidden');
     };
-    if (closeSettingsBtn) closeSettingsBtn.onclick = () => settingsModal.classList.add('hidden');
+    if (closeSettingsBtn) closeSettingsBtn.onclick = () => {
+        settingsModal.classList.add('hidden');
+        if (needsGameReload) {
+            game.loadLevel(0, false);
+            needsGameReload = false;
+        }
+    };
 
     const refreshBtn = document.getElementById('refresh-collections-btn');
     if (refreshBtn) refreshBtn.onclick = () => renderCollectionManager();
@@ -69,21 +75,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
     }
 
-    // --- CACHE HELPERS ---
+    // --- CACHE & VERSIONING ---
+    const activeCacheName = `soko-v${window.SOKO_VERSION || '1.8'}`;
+
+    const updateVersionUI = () => {
+        const version = (window.SOKO_VERSION || '1.8');
+        const verElement = document.querySelector('.game-id');
+        if (verElement) verElement.textContent = `SOKO-${version}-LURD`.toUpperCase();
+    };
+
     const isFileCached = async (url) => {
-        const cache = await caches.open('soko-v1.8');
+        const cache = await caches.open(activeCacheName);
         const match = await cache.match(url);
         return !!match;
     };
 
     const cacheFile = async (url) => {
-        const cache = await caches.open('soko-v1.8');
+        const cache = await caches.open(activeCacheName);
         const response = await fetch(url);
         await cache.put(url, response);
     };
 
     const uncacheFile = async (url) => {
-        const cache = await caches.open('soko-v1.8');
+        const cache = await caches.open(activeCacheName);
         await cache.delete(url);
     };
 
@@ -105,11 +119,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const getGroup = (col, cached) => {
         const progress = getProgress(col);
-        if (progress >= col.levelCount) return 'completed';
-        if (progress > 0) return 'inProgress';
+        const isActive = col.id === CONFIG.id;
+        if (progress >= col.levelCount && col.levelCount > 0) return 'completed';
+        if (progress > 0 || isActive) return 'inProgress';
         if (cached) return 'offline';
         return 'available';
     };
+
+    let needsGameReload = false;
 
     // Session-level cache status cache (avoid async on every render)
     let cacheStatusMap = {}; // id -> bool
@@ -146,6 +163,49 @@ document.addEventListener('DOMContentLoaded', async () => {
         );
 
         frozenGrouping = grouped;
+    };
+
+    const switchCollection = async (colId) => {
+        const col = CONFIG.COLLECTIONS.find(c => c.id === colId);
+        if (!col) return;
+
+        // 1. Update active collection in CONFIG and LocalStorage
+        Object.assign(CONFIG, col);
+        localStorage.setItem('soko_active_collection', colId);
+
+        // 2. Update Game instance metadata
+        game.highestCompletedLevel = getProgress(col);
+
+        try {
+            // 3. Load New Levels
+            const levelUrl = CONFIG.levelFile;
+            let levelText;
+            const cachedResp = await caches.open(activeCacheName).then(c => c.match(levelUrl));
+            if (cachedResp) {
+                levelText = await cachedResp.text();
+            } else {
+                const networkResp = await fetch(levelUrl);
+                const respClone = networkResp.clone();
+                caches.open(activeCacheName).then(c => c.put(levelUrl, respClone));
+                levelText = await networkResp.text();
+            }
+            game.setLevels(SokobanParser.parse(levelText));
+
+            // 4. Load current level
+            const startLevel = parseInt(localStorage.getItem(`${CONFIG.storagePrefix}_current_level`)) || 0;
+            game.loadLevel(startLevel);
+
+            // 5. UI Cleanup
+            settingsModal.classList.add('hidden');
+            expandedItem = null;
+            openGroup = null;
+            updateUIState();
+
+            // Force a re-group check for the next time modal opens
+            frozenGrouping = null;
+        } catch (err) {
+            console.error('Seamless switch failed:', err);
+        }
     };
 
     const renderCollectionManager = () => {
@@ -223,11 +283,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             btn.innerHTML = `<span>${label}</span><span class="cm-count">${liveCounters[key]}</span>`;
             btn.onclick = () => {
                 openGroup = key;
-                // If the user clicks into a previously empty group (visually), 
-                // we should regroup so they actually see items that moved there.
-                if (frozenGrouping[key].length === 0 && liveCounters[key] > 0) {
-                    performReGroup();
-                }
+                performReGroup();
                 renderCollectionManager();
             };
             groupContainer.appendChild(btn);
@@ -267,9 +323,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if (!isEmpty || liveCounters[key] > 0) {
                 header.onclick = () => {
-                    const wasEmptyVisually = items.length === 0;
                     openGroup = (openGroup === key) ? null : key;
-                    if (openGroup === key && wasEmptyVisually) {
+                    if (openGroup === key) {
                         performReGroup();
                     }
                     renderCollectionManager();
@@ -323,18 +378,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         const cacheBtn = document.createElement('button');
         cacheBtn.className = 'cm-cache-btn';
         cacheBtn.textContent = cached ? '✅' : '📥';
-        cacheBtn.onclick = async (e) => {
-            e.stopPropagation();
-            if (cached) {
-                await uncacheFile(col.levelFile);
-                cacheStatusMap[col.id] = false;
-            } else {
-                cacheBtn.textContent = '⏳';
-                await cacheFile(col.levelFile);
-                cacheStatusMap[col.id] = true;
-            }
-            renderCollectionManager();
-        };
+        if (isActive && cached) {
+            cacheBtn.classList.add('disabled');
+            cacheBtn.title = "Current collection cannot be un-cached";
+            cacheBtn.style.opacity = '0.3';
+            cacheBtn.style.cursor = 'not-allowed';
+        } else {
+            cacheBtn.onclick = async (e) => {
+                e.stopPropagation();
+                if (cached) {
+                    await uncacheFile(col.levelFile);
+                    cacheStatusMap[col.id] = false;
+                } else {
+                    cacheBtn.textContent = '⏳';
+                    await cacheFile(col.levelFile);
+                    cacheStatusMap[col.id] = true;
+                }
+                renderCollectionManager();
+            };
+        }
 
         row.appendChild(chevron);
         row.appendChild(nameEl);
@@ -343,8 +405,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         row.onclick = () => {
             if (col.id !== CONFIG.id) {
-                localStorage.setItem('soko_active_collection', col.id);
-                window.location.reload();
+                switchCollection(col.id);
             }
         };
 
@@ -366,6 +427,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 resetBtn.onclick = (e) => {
                     e.stopPropagation();
                     resetProgress(col);
+                    if (isActive) needsGameReload = true;
                     expandedItem = null;
                     renderCollectionManager();
                 };
@@ -628,31 +690,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     try {
-        // Cache-first load: fetch and store level file if not already cached
+        updateVersionUI();
+
+        // Initial Load
         const levelUrl = CONFIG.levelFile;
         let levelText;
-        const cachedResp = await caches.open('soko-v1.9').then(c => c.match(levelUrl));
+        const cachedResp = await caches.open(activeCacheName).then(c => c.match(levelUrl));
         if (cachedResp) {
             levelText = await cachedResp.text();
         } else {
             const networkResp = await fetch(levelUrl);
             const respClone = networkResp.clone();
-            caches.open('soko-v1.9').then(c => c.put(levelUrl, respClone));
+            caches.open(activeCacheName).then(c => c.put(levelUrl, respClone));
             levelText = await networkResp.text();
         }
         game.setLevels(SokobanParser.parse(levelText));
         game.loadLevel(parseInt(localStorage.getItem(`${CONFIG.storagePrefix}_current_level`)) || 0);
         updateUIState();
         document.body.classList.add('ready');
-
-        // Dynamic Versioning from Service Worker
-        fetch('sw.js').then(r => r.text()).then(text => {
-            const match = text.match(/const CACHE_NAME = '([^']+)';/);
-            if (match) {
-                const version = match[1].split('-').pop();
-                const verElement = document.querySelector('.game-id');
-                if (verElement) verElement.textContent = `SOKO-${version}-LURD`.toUpperCase();
-            }
-        });
     } catch (err) { console.error('Failed to load levels:', err); }
 });
