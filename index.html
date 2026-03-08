@@ -175,14 +175,18 @@
             <!-- SETTINGS MODAL -->
             <div id="settings-modal" class="hidden">
                 <div class="overlay-content message-content">
-                    <div class="cm-modal-header">
-                        <h2>Collections</h2>
-                        <button id="refresh-collections-btn" class="icon-btn" title="Refresh grouping">↺</button>
+                    <div class="cm-header">
+                        <div class="cm-modal-header">
+                            <h2>Collections</h2>
+                            <button id="refresh-collections-btn" class="icon-btn" title="Refresh grouping">↺</button>
+                        </div>
                     </div>
-                    <div id="edition-list">
+                    <div id="edition-list" class="cm-body">
                         <!-- Populated dynamically -->
                     </div>
-                    <button id="close-settings-btn" class="secondary-btn" style="width: 100%;">Close</button>
+                    <div class="cm-footer">
+                        <button id="close-settings-btn" class="secondary-btn" style="width: 100%;">Close</button>
+                    </div>
                 </div>
             </div>
         </main>

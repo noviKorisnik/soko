@@ -111,32 +111,70 @@ h3 {
 }
 
 /* --- COLLECTION MANAGER --- */
+/* --- COLLECTION MANAGER --- */
+#settings-modal .overlay-content {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    /* Let internal containers handle padding */
+    height: 90vh;
+    /* Fixed height for stability */
+    max-height: 90vh;
+    width: 90vw;
+    max-width: 800px;
+    min-width: 310px;
+    overflow: hidden;
+    /* Body will handle children */
+}
+
+.cm-header {
+    padding: 20px 20px 10px;
+    flex-shrink: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.cm-body {
+    flex: 1;
+    display: flex;
+    min-height: 0;
+    overflow: hidden;
+    /* No nested scrolling */
+    scrollbar-gutter: stable;
+}
+
+.cm-footer {
+    padding: 10px 20px 20px;
+    flex-shrink: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
 .cm-modal-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 12px;
 }
 
 .cm-modal-header h2 {
     margin-bottom: 0;
 }
 
-#edition-list {
+/* Portrait / Vertical Layout */
+.cm-portrait {
     display: flex;
     flex-direction: column;
+    padding: 10px 20px;
     gap: 4px;
+    height: 100%;
     width: 100%;
-    max-height: 50vh;
-    overflow-y: auto;
-    margin-bottom: 12px;
+    justify-content: flex-start;
+    /* Ensure start-aligned */
 }
 
 .cm-group-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 12px;
+    padding: 10px 12px;
     background: rgba(255, 255, 255, 0.05);
     border-radius: 6px;
     cursor: pointer;
@@ -146,6 +184,7 @@ h3 {
     letter-spacing: 1px;
     color: var(--text-muted);
     user-select: none;
+    flex-shrink: 0;
 }
 
 .cm-group-header.open {
@@ -153,11 +192,128 @@ h3 {
     background: rgba(56, 189, 248, 0.08);
 }
 
+.cm-group-header.disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.cm-group-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 0 1 auto;
+    /* Allow growth but prioritize shrink/stability */
+    overflow-y: auto;
+    padding: 4px 0;
+    scrollbar-gutter: stable;
+    min-height: 0;
+}
+
+/* Landscape / Horizontal Layout */
+.cm-landscape {
+    flex-direction: row;
+    height: 100%;
+    width: 100%;
+}
+
+.cm-sidebar {
+    width: 220px;
+    flex-shrink: 0;
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.cm-sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    flex-shrink: 0;
+}
+
+.cm-sidebar-header h3 {
+    margin-bottom: 0;
+    font-size: 1rem;
+    color: var(--text-color);
+}
+
+.cm-sidebar-refresh {
+    width: 30px;
+    height: 30px;
+    font-size: 0.9rem;
+}
+
+.cm-sidebar-groups {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+}
+
+.cm-sidebar-close {
+    margin-top: auto;
+    width: 100%;
+    flex-shrink: 0;
+}
+
+.cm-content-area {
+    flex: 1;
+    padding: 10px 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    scrollbar-gutter: stable;
+}
+
+.cm-sidebar-btn {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+    border-radius: 6px;
+    text-align: left;
+    transition: all 0.15s;
+    user-select: none;
+}
+
+.cm-sidebar-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.cm-sidebar-btn.active {
+    background: var(--accent-color);
+    color: #020617;
+}
+
+.cm-sidebar-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+/* Common Item Components */
 .cm-count {
     background: rgba(255, 255, 255, 0.1);
     border-radius: 10px;
     padding: 1px 7px;
     font-size: 0.7rem;
+    margin-left: 8px;
+}
+
+.cm-sidebar-btn.active .cm-count {
+    background: rgba(0, 0, 0, 0.2);
 }
 
 .cm-item {
@@ -165,6 +321,9 @@ h3 {
     overflow: hidden;
     border: 1px solid transparent;
     transition: border-color 0.15s;
+    background: rgba(255, 255, 255, 0.03);
+    flex-shrink: 0;
+    /* No squishing */
 }
 
 .cm-item.cm-active {
@@ -175,13 +334,12 @@ h3 {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 8px 10px;
+    padding: 10px;
     cursor: pointer;
-    background: rgba(255, 255, 255, 0.03);
 }
 
 .cm-row:hover {
-    background: rgba(255, 255, 255, 0.07);
+    background: rgba(255, 255, 255, 0.04);
 }
 
 .cm-chevron {
@@ -190,22 +348,31 @@ h3 {
     color: var(--text-muted);
     font-size: 1.1rem;
     cursor: pointer;
-    padding: 0 4px;
+    padding: 0;
     line-height: 1;
     flex-shrink: 0;
-    touch-action: none;
+    width: 30px;
+    display: flex;
+    justify-content: center;
 }
 
 .cm-name {
     flex: 1;
     font-size: 0.9rem;
     font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
 }
 
 .cm-meta {
     font-size: 0.75rem;
     color: var(--text-muted);
     white-space: nowrap;
+    width: 60px;
+    text-align: right;
+    flex-shrink: 0;
 }
 
 .cm-cache-btn {
@@ -213,17 +380,19 @@ h3 {
     border: none;
     cursor: pointer;
     font-size: 1rem;
-    padding: 0 2px;
+    padding: 0;
     flex-shrink: 0;
-    touch-action: none;
+    width: 40px;
+    display: flex;
+    justify-content: center;
 }
 
 .cm-detail {
-    padding: 8px 12px 10px 32px;
-    background: rgba(0, 0, 0, 0.2);
+    padding: 0 12px 12px 40px;
+    background: rgba(0, 0, 0, 0.15);
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
 }
 
 .cm-description {
@@ -234,8 +403,8 @@ h3 {
 
 .cm-reset-btn {
     align-self: flex-start;
-    font-size: 0.78rem;
-    padding: 4px 10px;
+    font-size: 0.75rem;
+    padding: 6px 12px;
 }
 
 .icon-btn {
@@ -248,13 +417,24 @@ h3 {
     border-radius: 6px;
     cursor: pointer;
     transition: background 0.15s, transform 0.15s;
-    touch-action: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .icon-btn:hover {
     background-color: var(--accent-color);
     color: #020617;
-    transform: scale(1.05);
+}
+
+/* Fix for landscape scaling issues */
+@media (orientation: landscape) and (max-height: 500px) {
+    #settings-modal .overlay-content {
+        transform: scale(1);
+        /* No scale down */
+        height: 95vh;
+        max-height: 95vh;
+    }
 }
 
 .modal-actions {

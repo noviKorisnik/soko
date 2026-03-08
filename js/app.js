@@ -130,7 +130,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     let expandedItem = null;  // which col.id is expanded inside group
 
     const renderCollectionManager = () => {
+        const isLandscape = window.innerWidth > window.innerHeight;
+        const modal = document.getElementById('settings-modal');
+        const header = modal.querySelector('.cm-header');
+        const footer = modal.querySelector('.cm-footer');
+
+        // Toggle global header/footer based on orientation
+        if (isLandscape) {
+            header.style.display = 'none';
+            footer.style.display = 'none';
+        } else {
+            header.style.display = 'block';
+            footer.style.display = 'block';
+        }
+
         editionList.innerHTML = '';
+        editionList.className = `cm-body ${isLandscape ? 'cm-landscape' : 'cm-portrait'}`;
 
         // Group collections
         const grouped = {};
@@ -146,124 +161,192 @@ document.addEventListener('DOMContentLoaded', async () => {
             (getProgress(b) / b.levelCount) - (getProgress(a) / a.levelCount)
         );
 
-        // Set default open group
+        // Auto-detect open group if not set
         if (!openGroup) {
             const activeGroup = getGroup(CONFIG, cacheStatusMap[CONFIG.id]);
             openGroup = activeGroup;
         }
 
+        if (isLandscape) {
+            renderLandscapeCM(grouped);
+        } else {
+            renderPortraitCM(grouped);
+        }
+    };
+
+    const renderLandscapeCM = (grouped) => {
+        // Sidebar for groups, title, refresh, and close
+        const sidebar = document.createElement('div');
+        sidebar.className = 'cm-sidebar';
+
+        // Title + Refresh row in sidebar
+        const navHeader = document.createElement('div');
+        navHeader.className = 'cm-sidebar-header';
+        navHeader.innerHTML = `<h3>Collections</h3>`;
+
+        const refreshBtn = document.createElement('button');
+        refreshBtn.className = 'icon-btn cm-sidebar-refresh';
+        refreshBtn.innerHTML = '↺';
+        refreshBtn.title = 'Refresh grouping';
+        refreshBtn.onclick = () => renderCollectionManager();
+        navHeader.appendChild(refreshBtn);
+        sidebar.appendChild(navHeader);
+
+        // Group selector buttons
+        const groupContainer = document.createElement('div');
+        groupContainer.className = 'cm-sidebar-groups';
+
         GROUPS.forEach(({ key, label }) => {
             const items = grouped[key];
-            if (items.length === 0) return;
+            const btn = document.createElement('button');
+            btn.className = `cm-sidebar-btn ${openGroup === key ? 'active' : ''}`;
+            btn.disabled = items.length === 0;
+            btn.innerHTML = `<span>${label}</span><span class="cm-count">${items.length}</span>`;
+            btn.onclick = () => {
+                openGroup = key;
+                renderCollectionManager();
+            };
+            groupContainer.appendChild(btn);
+        });
+        sidebar.appendChild(groupContainer);
+
+        // Close button at the bottom of the sidebar
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'secondary-btn cm-sidebar-close';
+        closeBtn.textContent = 'Close';
+        closeBtn.onclick = () => settingsModal.classList.add('hidden');
+        sidebar.appendChild(closeBtn);
+
+        // Main content area
+        const content = document.createElement('div');
+        content.className = 'cm-content-area';
+
+        const items = grouped[openGroup] || [];
+        items.forEach(col => {
+            content.appendChild(createItemRow(col));
+        });
+
+        editionList.appendChild(sidebar);
+        editionList.appendChild(content);
+    };
+
+    const renderPortraitCM = (grouped) => {
+        GROUPS.forEach(({ key, label }) => {
+            const items = grouped[key];
+            const isEmpty = items.length === 0;
+            const isOpen = openGroup === key && !isEmpty;
 
             // Group header
             const header = document.createElement('div');
-            header.className = `cm-group-header ${openGroup === key ? 'open' : ''}`;
+            header.className = `cm-group-header ${isOpen ? 'open' : ''} ${isEmpty ? 'disabled' : ''}`;
             header.innerHTML = `<span>${label}</span><span class="cm-count">${items.length}</span>`;
-            header.onclick = () => {
-                openGroup = (openGroup === key) ? null : key;
-                renderCollectionManager();
-            };
+
+            if (!isEmpty) {
+                header.onclick = () => {
+                    openGroup = (openGroup === key) ? null : key;
+                    renderCollectionManager();
+                };
+            }
             editionList.appendChild(header);
 
-            if (openGroup !== key) return;
-
-            // Items
-            items.forEach(col => {
-                const progress = getProgress(col);
-                const progressText = col.levelCount ? `${progress}/${col.levelCount}` : '';
-                const cached = cacheStatusMap[col.id];
-                const isActive = col.id === CONFIG.id;
-                const isExpanded = expandedItem === col.id;
-                const isCompleted = progress >= col.levelCount && col.levelCount > 0;
-
-                const item = document.createElement('div');
-                item.className = `cm-item ${isActive ? 'cm-active' : ''} ${isExpanded ? 'cm-expanded' : ''}`;
-
-                // Collapsed row
-                const row = document.createElement('div');
-                row.className = 'cm-row';
-
-                const chevron = document.createElement('button');
-                chevron.className = 'cm-chevron';
-                chevron.textContent = isExpanded ? '▾' : '›';
-                chevron.title = isExpanded ? 'Collapse' : 'Expand';
-                chevron.onclick = (e) => {
-                    e.stopPropagation();
-                    expandedItem = isExpanded ? null : col.id;
-                    renderCollectionManager();
-                };
-
-                const nameEl = document.createElement('span');
-                nameEl.className = 'cm-name';
-                nameEl.textContent = col.name;
-                if (isCompleted) nameEl.textContent += ' ✓';
-
-                const metaEl = document.createElement('span');
-                metaEl.className = 'cm-meta';
-                metaEl.textContent = progressText;
-
-                const cacheBtn = document.createElement('button');
-                cacheBtn.className = 'cm-cache-btn';
-                cacheBtn.title = cached ? 'Remove offline copy' : 'Save for offline';
-                cacheBtn.textContent = cached ? '✅' : '📥';
-                cacheBtn.onclick = async (e) => {
-                    e.stopPropagation();
-                    if (cached) {
-                        await uncacheFile(col.levelFile);
-                        cacheStatusMap[col.id] = false;
-                    } else {
-                        cacheBtn.textContent = '⏳';
-                        cacheBtn.disabled = true;
-                        await cacheFile(col.levelFile);
-                        cacheStatusMap[col.id] = true;
-                    }
-                    renderCollectionManager();
-                };
-
-                row.appendChild(chevron);
-                row.appendChild(nameEl);
-                row.appendChild(metaEl);
-                row.appendChild(cacheBtn);
-
-                // Tap row = activate collection
-                row.onclick = () => {
-                    if (col.id !== CONFIG.id) {
-                        localStorage.setItem('soko_active_collection', col.id);
-                        window.location.reload();
-                    }
-                };
-
-                item.appendChild(row);
-
-                // Expanded detail
-                if (isExpanded) {
-                    const detail = document.createElement('div');
-                    detail.className = 'cm-detail';
-                    if (col.description) {
-                        const desc = document.createElement('p');
-                        desc.className = 'cm-description';
-                        desc.textContent = col.description;
-                        detail.appendChild(desc);
-                    }
-                    if (progress > 0) {
-                        const resetBtn = document.createElement('button');
-                        resetBtn.className = 'secondary-btn cm-reset-btn';
-                        resetBtn.textContent = 'Reset Progress';
-                        resetBtn.onclick = (e) => {
-                            e.stopPropagation();
-                            resetProgress(col);
-                            expandedItem = null;
-                            renderCollectionManager();
-                        };
-                        detail.appendChild(resetBtn);
-                    }
-                    item.appendChild(detail);
-                }
-
-                editionList.appendChild(item);
-            });
+            if (isOpen) {
+                const groupList = document.createElement('div');
+                groupList.className = 'cm-group-list';
+                items.forEach(col => {
+                    groupList.appendChild(createItemRow(col));
+                });
+                editionList.appendChild(groupList);
+            }
         });
+    };
+
+    const createItemRow = (col) => {
+        const progress = getProgress(col);
+        const progressText = col.levelCount ? `${progress}/${col.levelCount}` : '';
+        const cached = cacheStatusMap[col.id];
+        const isActive = col.id === CONFIG.id;
+        const isExpanded = expandedItem === col.id;
+        const isCompleted = progress >= col.levelCount && col.levelCount > 0;
+
+        const item = document.createElement('div');
+        item.className = `cm-item ${isActive ? 'cm-active' : ''} ${isExpanded ? 'cm-expanded' : ''}`;
+
+        const row = document.createElement('div');
+        row.className = 'cm-row';
+
+        const chevron = document.createElement('button');
+        chevron.className = 'cm-chevron';
+        chevron.textContent = isExpanded ? '▾' : '›';
+        chevron.onclick = (e) => {
+            e.stopPropagation();
+            expandedItem = isExpanded ? null : col.id;
+            renderCollectionManager();
+        };
+
+        const nameEl = document.createElement('span');
+        nameEl.className = 'cm-name';
+        nameEl.textContent = col.name;
+        if (isCompleted) nameEl.textContent += ' ✓';
+
+        const metaEl = document.createElement('span');
+        metaEl.className = 'cm-meta';
+        metaEl.textContent = progressText;
+
+        const cacheBtn = document.createElement('button');
+        cacheBtn.className = 'cm-cache-btn';
+        cacheBtn.textContent = cached ? '✅' : '📥';
+        cacheBtn.onclick = async (e) => {
+            e.stopPropagation();
+            if (cached) {
+                await uncacheFile(col.levelFile);
+                cacheStatusMap[col.id] = false;
+            } else {
+                cacheBtn.textContent = '⏳';
+                await cacheFile(col.levelFile);
+                cacheStatusMap[col.id] = true;
+            }
+            renderCollectionManager();
+        };
+
+        row.appendChild(chevron);
+        row.appendChild(nameEl);
+        row.appendChild(metaEl);
+        row.appendChild(cacheBtn);
+
+        row.onclick = () => {
+            if (col.id !== CONFIG.id) {
+                localStorage.setItem('soko_active_collection', col.id);
+                window.location.reload();
+            }
+        };
+
+        item.appendChild(row);
+
+        if (isExpanded) {
+            const detail = document.createElement('div');
+            detail.className = 'cm-detail';
+            if (col.description) {
+                const desc = document.createElement('p');
+                desc.className = 'cm-description';
+                desc.textContent = col.description;
+                detail.appendChild(desc);
+            }
+            if (progress > 0) {
+                const resetBtn = document.createElement('button');
+                resetBtn.className = 'secondary-btn cm-reset-btn';
+                resetBtn.textContent = 'Reset Progress';
+                resetBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    resetProgress(col);
+                    expandedItem = null;
+                    renderCollectionManager();
+                };
+                detail.appendChild(resetBtn);
+            }
+            item.appendChild(detail);
+        }
+
+        return item;
     };
 
     // Close on backdrop click
@@ -511,7 +594,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         else { badge?.classList.remove('show'); container?.classList.remove('level-solved'); overlay.classList.add('hidden'); }
     });
 
-    window.addEventListener('resize', () => game.render());
+    window.addEventListener('resize', () => {
+        game.render();
+        if (!settingsModal.classList.contains('hidden')) renderCollectionManager();
+    });
 
     try {
         // Cache-first load: fetch and store level file if not already cached
