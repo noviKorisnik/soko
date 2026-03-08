@@ -91,11 +91,41 @@ export default class SokobanGame {
         let startX = 0;
         let endX = this.grid[0] ? this.grid[0].length : 0;
 
-        // Strip outer walls (1-cell hard trim)
-        const rowWidth = endX;
-        const colHeight = endY;
-        if (colHeight > 2) { startY = 1; endY = colHeight - 1; }
-        if (rowWidth > 2) { startX = 1; endX = rowWidth - 1; }
+        // Aggressive Trim: Iteratively remove outer rows/cols that are purely walls
+        const isWall = (y, x) => (this.grid[y] && this.grid[y][x]) === this.CELL_TYPES.WALL;
+
+        // Trim top rows
+        while (endY - startY > 3) {
+            let allWalls = true;
+            for (let x = startX; x < endX; x++) {
+                if (!isWall(startY, x)) { allWalls = false; break; }
+            }
+            if (allWalls) startY++; else break;
+        }
+        // Trim bottom rows
+        while (endY - startY > 3) {
+            let allWalls = true;
+            for (let x = startX; x < endX; x++) {
+                if (!isWall(endY - 1, x)) { allWalls = false; break; }
+            }
+            if (allWalls) endY--; else break;
+        }
+        // Trim left columns
+        while (endX - startX > 3) {
+            let allWalls = true;
+            for (let y = startY; y < endY; y++) {
+                if (!isWall(y, startX)) { allWalls = false; break; }
+            }
+            if (allWalls) startX++; else break;
+        }
+        // Trim right columns
+        while (endX - startX > 3) {
+            let allWalls = true;
+            for (let y = startY; y < endY; y++) {
+                if (!isWall(y, endX - 1)) { allWalls = false; break; }
+            }
+            if (allWalls) endX--; else break;
+        }
 
         const viewRows = endY - startY;
         const viewCols = endX - startX;

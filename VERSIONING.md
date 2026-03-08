@@ -3,10 +3,11 @@
 This document outlines how the Soko project handles versioning and cache management.
 
 ## Single Source of Truth
-The canonical project version is defined in `sw.js` via the `CACHE_NAME` constant.
-- Example: `const CACHE_NAME = 'soko-v1.9.1';`
+The canonical project version is defined in `js/version.js` via the `SOKO_VERSION` constant.
+- Example: `const SOKO_VERSION = '1.9.1';`
 
-The application (`app.js`) dynamically parses this file at runtime to ensure all cache operations (level loading, offline saving) are synchronized with the Service Worker.
+The **Service Worker** (`sw.js`) imports this file to set its `CACHE_NAME`.
+The **Application** (`app.js`) reads this global variable to synchronize its cache operations. This ensures that level loading and offline saving always use the correct cache bucket.
 
 ## Version Format: `X.Y.Z`
 We use a three-part versioning system: `[Major].[Cycle].[Iteration]`
