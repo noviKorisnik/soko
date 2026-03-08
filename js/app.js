@@ -201,6 +201,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         btn.addEventListener('pointerdown', (e) => {
             if (e.button !== 0) return; // Only left-click
+            if (moveRepeater.isActive) return; // Ignore during active swipe
             btn.setPointerCapture(e.pointerId);
             repeater.start();
         });
@@ -242,6 +243,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     gameContainer.addEventListener('pointermove', (e) => {
+        if (activePointers.size === 0) return; // Guard: finger already up, ignore late events
         if (!activePointers.has(e.pointerId)) return;
         activePointers.get(e.pointerId).x = e.screenX;
         activePointers.get(e.pointerId).y = e.screenY;
