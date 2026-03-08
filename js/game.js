@@ -11,7 +11,7 @@ export default class SokobanGame {
         this.statsElements = statsElements; // { moves, pushes, levelNum }
 
         this.currentLevelIndex = 0;
-        this.highestCompletedLevel = parseInt(localStorage.getItem(`${CONFIG.STORAGE_PREFIX}_highest`)) || 0;
+        this.highestCompletedLevel = parseInt(localStorage.getItem(`${CONFIG.storagePrefix}_highest`)) || 0;
         this.isCompleted = false;
         this.levels = [];
         this.grid = []; // 2D array of cells
@@ -48,7 +48,7 @@ export default class SokobanGame {
         }
 
         this.currentLevelIndex = index;
-        localStorage.setItem(`${CONFIG.STORAGE_PREFIX}_current_level`, index);
+        localStorage.setItem(`${CONFIG.storagePrefix}_current_level`, index);
         this.isCompleted = false;
 
         const savedData = useSavedState ? this.getSavedState(index) : null;
@@ -91,51 +91,34 @@ export default class SokobanGame {
         let startX = 0;
         let endX = this.grid[0] ? this.grid[0].length : 0;
 
-        // Mobile optimization: Strip outer walls (1 cell from each boundary)
-        if (CONFIG.STRIP_OUTER_WALLS) {
-            const rowWidth = endX;
-            const colHeight = endY;
-
-            // Hard 1-cell trim as requested (we assume levels have at least 3x3 dimensions)
-            if (colHeight > 2) {
-                startY = 1;
-                endY = colHeight - 1;
-            }
-            if (rowWidth > 2) {
-                startX = 1;
-                endX = rowWidth - 1;
-            }
-        }
+        // Strip outer walls (1-cell hard trim)
+        const rowWidth = endX;
+        const colHeight = endY;
+        if (colHeight > 2) { startY = 1; endY = colHeight - 1; }
+        if (rowWidth > 2) { startX = 1; endX = rowWidth - 1; }
 
         const viewRows = endY - startY;
         const viewCols = endX - startX;
 
-        // 2. Auto-rotate if configured
+        // Auto-rotate: if screen is portrait and level is landscape, rotate
         let isRotated = false;
-        if (CONFIG.AUTO_ROTATE) {
-            const screenPortrait = window.innerHeight > window.innerWidth;
-            const levelLandscape = viewCols > viewRows;
-            if (screenPortrait && levelLandscape) isRotated = true;
-        }
+        const screenPortrait = window.innerHeight > window.innerWidth;
+        const levelLandscape = viewCols > viewRows;
+        if (screenPortrait && levelLandscape) isRotated = true;
 
         const finalRows = isRotated ? viewCols : viewRows;
         const finalCols = isRotated ? viewRows : viewCols;
 
-        // 3. Size Calculations
-        if (CONFIG.AUTO_ADJUST_SIZE) {
-            const parent = this.boardElement.parentElement;
-            const padding = 40; // Space for internal layout
-            const availW = parent.clientWidth - padding;
-            const availH = parent.clientHeight - padding;
-
-            // Account for the board's CSS border thickness
-            const borderSpace = 30; // 15px per side
-
-            const cellW = (availW - borderSpace) / finalCols;
-            const cellH = (availH - borderSpace) / finalRows;
-            const cellSize = Math.floor(Math.min(cellW, cellH, 60));
-            this.boardElement.style.setProperty('--cell-size', `${cellSize}px`);
-        }
+        // Auto-size: fit board to available container space
+        const parent = this.boardElement.parentElement;
+        const padding = 40;
+        const availW = parent.clientWidth - padding;
+        const availH = parent.clientHeight - padding;
+        const borderSpace = 30;
+        const cellW = (availW - borderSpace) / finalCols;
+        const cellH = (availH - borderSpace) / finalRows;
+        const cellSize = Math.floor(Math.min(cellW, cellH, 60));
+        this.boardElement.style.setProperty('--cell-size', `${cellSize}px`);
 
         this.boardElement.style.gridTemplateColumns = `repeat(${finalCols}, var(--cell-size))`;
         this.boardElement.style.gridTemplateRows = `repeat(${finalRows}, var(--cell-size))`;
@@ -356,7 +339,7 @@ export default class SokobanGame {
         // Update highest completed
         if (this.currentLevelIndex >= this.highestCompletedLevel) {
             this.highestCompletedLevel = this.currentLevelIndex + 1;
-            localStorage.setItem(`${CONFIG.STORAGE_PREFIX}_highest`, this.highestCompletedLevel);
+            localStorage.setItem(`${CONFIG.storagePrefix}_highest`, this.highestCompletedLevel);
         }
 
         if (triggerEvent) {
@@ -377,16 +360,16 @@ export default class SokobanGame {
             pushes: this.pushes,
             history: this.history
         };
-        localStorage.setItem(`${CONFIG.STORAGE_PREFIX}_state_${this.currentLevelIndex}`, JSON.stringify(data));
+        localStorage.setItem(`${CONFIG.storagePrefix}_state_${this.currentLevelIndex}`, JSON.stringify(data));
     }
 
     getSavedState(index) {
-        const item = localStorage.getItem(`${CONFIG.STORAGE_PREFIX}_state_${index}`);
+        const item = localStorage.getItem(`${CONFIG.storagePrefix}_state_${index}`);
         return item ? JSON.parse(item) : null;
     }
 
     clearSavedState(index) {
-        localStorage.removeItem(`${CONFIG.STORAGE_PREFIX}_state_${index}`);
+        localStorage.removeItem(`${CONFIG.storagePrefix}_state_${index}`);
     }
 
     updateStats() {

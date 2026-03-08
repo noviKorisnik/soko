@@ -214,23 +214,7 @@ button {
     transform: translateY(-1px);
 }
 
-.icon-btn {
-    background-color: var(--card-bg);
-    color: var(--text-color);
-    width: 44px;
-    height: 44px;
-    font-size: 1.2rem;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.icon-btn:hover {
-    background-color: var(--accent-color);
-    color: #020617;
-    transform: scale(1.05);
-}
-
-button:disabled,
-.icon-btn:disabled {
+button:disabled {
     opacity: 0.2;
     cursor: not-allowed !important;
     transform: none !important;

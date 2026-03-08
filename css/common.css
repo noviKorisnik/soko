@@ -110,11 +110,151 @@ h3 {
     letter-spacing: 2px;
 }
 
+/* --- COLLECTION MANAGER --- */
+.cm-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.cm-modal-header h2 {
+    margin-bottom: 0;
+}
+
 #edition-list {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 4px;
     width: 100%;
+    max-height: 50vh;
+    overflow-y: auto;
+    margin-bottom: 12px;
+}
+
+.cm-group-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    user-select: none;
+}
+
+.cm-group-header.open {
+    color: var(--accent-color);
+    background: rgba(56, 189, 248, 0.08);
+}
+
+.cm-count {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 1px 7px;
+    font-size: 0.7rem;
+}
+
+.cm-item {
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid transparent;
+    transition: border-color 0.15s;
+}
+
+.cm-item.cm-active {
+    border-color: var(--accent-color);
+}
+
+.cm-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.cm-row:hover {
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.cm-chevron {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+    flex-shrink: 0;
+    touch-action: none;
+}
+
+.cm-name {
+    flex: 1;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.cm-meta {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.cm-cache-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0 2px;
+    flex-shrink: 0;
+    touch-action: none;
+}
+
+.cm-detail {
+    padding: 8px 12px 10px 32px;
+    background: rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.cm-description {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+.cm-reset-btn {
+    align-self: flex-start;
+    font-size: 0.78rem;
+    padding: 4px 10px;
+}
+
+.icon-btn {
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    width: 36px;
+    height: 36px;
+    font-size: 1.1rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.15s;
+    touch-action: none;
+}
+
+.icon-btn:hover {
+    background-color: var(--accent-color);
+    color: #020617;
+    transform: scale(1.05);
 }
 
 .modal-actions {

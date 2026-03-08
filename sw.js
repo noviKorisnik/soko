@@ -1,4 +1,4 @@
-const CACHE_NAME = 'soko-v1.8';
+const CACHE_NAME = 'soko-v1.9';
 const ASSETS = [
     './',
     './index.html',
@@ -12,10 +12,7 @@ const ASSETS = [
     './js/game.js',
     './js/parser.js',
     './js/repeater.js',
-    './resources/soko.png',
-    './resources/Our-Original-Levels.txt',
-    './resources/Thinking-Rabbit-Original-Plus-Extra.txt',
-    './resources/Junior-1.txt'
+    './resources/soko.png'
 ];
 
 self.addEventListener('install', (event) => {

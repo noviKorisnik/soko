@@ -43,11 +43,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (helpBtn) helpBtn.onclick = () => aboutModal.classList.remove('hidden');
     if (closeAboutBtn) closeAboutBtn.onclick = () => aboutModal.classList.add('hidden');
 
-    if (settingsBtn) settingsBtn.onclick = () => {
-        renderEditionList();
+    if (settingsBtn) settingsBtn.onclick = async () => {
+        openGroup = null; // reset to auto-detect on open
+        await refreshCacheStatus();
+        renderCollectionManager();
         settingsModal.classList.remove('hidden');
     };
     if (closeSettingsBtn) closeSettingsBtn.onclick = () => settingsModal.classList.add('hidden');
+
+    const refreshBtn = document.getElementById('refresh-collections-btn');
+    if (refreshBtn) refreshBtn.onclick = () => renderCollectionManager();
 
     // Fullscreen Logic
     const supportsFullscreen = !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen);
@@ -63,25 +68,201 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
     }
 
-    const renderEditionList = () => {
+    // --- CACHE HELPERS ---
+    const isFileCached = async (url) => {
+        const cache = await caches.open('soko-v1.8');
+        const match = await cache.match(url);
+        return !!match;
+    };
+
+    const cacheFile = async (url) => {
+        const cache = await caches.open('soko-v1.8');
+        const response = await fetch(url);
+        await cache.put(url, response);
+    };
+
+    const uncacheFile = async (url) => {
+        const cache = await caches.open('soko-v1.8');
+        await cache.delete(url);
+    };
+
+    // --- COLLECTION MANAGER ---
+    const getProgress = (col) => {
+        const highest = parseInt(localStorage.getItem(`${col.storagePrefix}_highest`)) || 0;
+        return highest; // number of completed levels
+    };
+
+    const resetProgress = (col) => {
+        const prefix = col.storagePrefix;
+        localStorage.removeItem(`${prefix}_highest`);
+        localStorage.removeItem(`${prefix}_current_level`);
+        // Clear all saved level states
+        Object.keys(localStorage)
+            .filter(k => k.startsWith(`${prefix}_state_`))
+            .forEach(k => localStorage.removeItem(k));
+    };
+
+    const getGroup = (col, cached) => {
+        const progress = getProgress(col);
+        if (progress >= col.levelCount) return 'completed';
+        if (progress > 0) return 'inProgress';
+        if (cached) return 'offline';
+        return 'available';
+    };
+
+    // Session-level cache status cache (avoid async on every render)
+    let cacheStatusMap = {}; // id -> bool
+
+    const refreshCacheStatus = async () => {
+        for (const col of CONFIG.COLLECTIONS) {
+            cacheStatusMap[col.id] = await isFileCached(col.levelFile);
+        }
+    };
+
+    const GROUPS = [
+        { key: 'inProgress', label: 'In Progress' },
+        { key: 'completed', label: 'Completed' },
+        { key: 'offline', label: 'Saved Offline' },
+        { key: 'available', label: 'Available' }
+    ];
+
+    let openGroup = null;     // which group key is expanded
+    let expandedItem = null;  // which col.id is expanded inside group
+
+    const renderCollectionManager = () => {
         editionList.innerHTML = '';
+
+        // Group collections
+        const grouped = {};
+        GROUPS.forEach(g => grouped[g.key] = []);
+
         CONFIG.COLLECTIONS.forEach(col => {
-            const btn = document.createElement('button');
-            btn.className = 'primary-btn';
-            btn.style.width = '100%';
-            btn.style.justifyContent = 'center';
-            btn.textContent = col.COLLECTION_NAME;
+            const group = getGroup(col, cacheStatusMap[col.id]);
+            grouped[group].push(col);
+        });
 
-            if (col.ID === CONFIG.ID) {
-                btn.style.border = '2px solid white';
-                btn.textContent += ' (Active)';
-            }
+        // Sort In Progress by % descending
+        grouped.inProgress.sort((a, b) =>
+            (getProgress(b) / b.levelCount) - (getProgress(a) / a.levelCount)
+        );
 
-            btn.onclick = () => {
-                localStorage.setItem('soko_active_collection', col.ID);
-                window.location.reload();
+        // Set default open group
+        if (!openGroup) {
+            const activeGroup = getGroup(CONFIG, cacheStatusMap[CONFIG.id]);
+            openGroup = activeGroup;
+        }
+
+        GROUPS.forEach(({ key, label }) => {
+            const items = grouped[key];
+            if (items.length === 0) return;
+
+            // Group header
+            const header = document.createElement('div');
+            header.className = `cm-group-header ${openGroup === key ? 'open' : ''}`;
+            header.innerHTML = `<span>${label}</span><span class="cm-count">${items.length}</span>`;
+            header.onclick = () => {
+                openGroup = (openGroup === key) ? null : key;
+                renderCollectionManager();
             };
-            editionList.appendChild(btn);
+            editionList.appendChild(header);
+
+            if (openGroup !== key) return;
+
+            // Items
+            items.forEach(col => {
+                const progress = getProgress(col);
+                const progressText = col.levelCount ? `${progress}/${col.levelCount}` : '';
+                const cached = cacheStatusMap[col.id];
+                const isActive = col.id === CONFIG.id;
+                const isExpanded = expandedItem === col.id;
+                const isCompleted = progress >= col.levelCount && col.levelCount > 0;
+
+                const item = document.createElement('div');
+                item.className = `cm-item ${isActive ? 'cm-active' : ''} ${isExpanded ? 'cm-expanded' : ''}`;
+
+                // Collapsed row
+                const row = document.createElement('div');
+                row.className = 'cm-row';
+
+                const chevron = document.createElement('button');
+                chevron.className = 'cm-chevron';
+                chevron.textContent = isExpanded ? '▾' : '›';
+                chevron.title = isExpanded ? 'Collapse' : 'Expand';
+                chevron.onclick = (e) => {
+                    e.stopPropagation();
+                    expandedItem = isExpanded ? null : col.id;
+                    renderCollectionManager();
+                };
+
+                const nameEl = document.createElement('span');
+                nameEl.className = 'cm-name';
+                nameEl.textContent = col.name;
+                if (isCompleted) nameEl.textContent += ' ✓';
+
+                const metaEl = document.createElement('span');
+                metaEl.className = 'cm-meta';
+                metaEl.textContent = progressText;
+
+                const cacheBtn = document.createElement('button');
+                cacheBtn.className = 'cm-cache-btn';
+                cacheBtn.title = cached ? 'Remove offline copy' : 'Save for offline';
+                cacheBtn.textContent = cached ? '✅' : '📥';
+                cacheBtn.onclick = async (e) => {
+                    e.stopPropagation();
+                    if (cached) {
+                        await uncacheFile(col.levelFile);
+                        cacheStatusMap[col.id] = false;
+                    } else {
+                        cacheBtn.textContent = '⏳';
+                        cacheBtn.disabled = true;
+                        await cacheFile(col.levelFile);
+                        cacheStatusMap[col.id] = true;
+                    }
+                    renderCollectionManager();
+                };
+
+                row.appendChild(chevron);
+                row.appendChild(nameEl);
+                row.appendChild(metaEl);
+                row.appendChild(cacheBtn);
+
+                // Tap row = activate collection
+                row.onclick = () => {
+                    if (col.id !== CONFIG.id) {
+                        localStorage.setItem('soko_active_collection', col.id);
+                        window.location.reload();
+                    }
+                };
+
+                item.appendChild(row);
+
+                // Expanded detail
+                if (isExpanded) {
+                    const detail = document.createElement('div');
+                    detail.className = 'cm-detail';
+                    if (col.description) {
+                        const desc = document.createElement('p');
+                        desc.className = 'cm-description';
+                        desc.textContent = col.description;
+                        detail.appendChild(desc);
+                    }
+                    if (progress > 0) {
+                        const resetBtn = document.createElement('button');
+                        resetBtn.className = 'secondary-btn cm-reset-btn';
+                        resetBtn.textContent = 'Reset Progress';
+                        resetBtn.onclick = (e) => {
+                            e.stopPropagation();
+                            resetProgress(col);
+                            expandedItem = null;
+                            renderCollectionManager();
+                        };
+                        detail.appendChild(resetBtn);
+                    }
+                    item.appendChild(detail);
+                }
+
+                editionList.appendChild(item);
+            });
         });
     };
 
@@ -325,7 +506,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateUIState();
         const badge = document.getElementById('completed-badge');
         const container = document.getElementById('game-container');
-        document.getElementById('app-title').innerHTML = `SOKO <span class="accent">${CONFIG.COLLECTION_NAME}</span>`;
+        document.getElementById('app-title').innerHTML = `SOKO <span class="accent">${CONFIG.name}</span>`;
         if (game.isCompleted) { badge?.classList.add('show'); container?.classList.add('level-solved'); }
         else { badge?.classList.remove('show'); container?.classList.remove('level-solved'); overlay.classList.add('hidden'); }
     });
@@ -333,10 +514,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.addEventListener('resize', () => game.render());
 
     try {
-        const response = await fetch(CONFIG.LEVEL_FILE);
-        game.setLevels(SokobanParser.parse(await response.text()));
-        game.loadLevel(parseInt(localStorage.getItem(`${CONFIG.STORAGE_PREFIX}_current_level`)) || 0);
-        // Initialize UI
+        // Cache-first load: fetch and store level file if not already cached
+        const levelUrl = CONFIG.levelFile;
+        let levelText;
+        const cachedResp = await caches.open('soko-v1.9').then(c => c.match(levelUrl));
+        if (cachedResp) {
+            levelText = await cachedResp.text();
+        } else {
+            const networkResp = await fetch(levelUrl);
+            const respClone = networkResp.clone();
+            caches.open('soko-v1.9').then(c => c.put(levelUrl, respClone));
+            levelText = await networkResp.text();
+        }
+        game.setLevels(SokobanParser.parse(levelText));
+        game.loadLevel(parseInt(localStorage.getItem(`${CONFIG.storagePrefix}_current_level`)) || 0);
         updateUIState();
         document.body.classList.add('ready');
 
@@ -344,7 +535,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         fetch('sw.js').then(r => r.text()).then(text => {
             const match = text.match(/const CACHE_NAME = '([^']+)';/);
             if (match) {
-                const version = match[1].split('-').pop(); // Get v1.2 part
+                const version = match[1].split('-').pop();
                 const verElement = document.querySelector('.game-id');
                 if (verElement) verElement.textContent = `SOKO-${version}-LURD`.toUpperCase();
             }
