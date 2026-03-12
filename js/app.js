@@ -524,13 +524,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
 
-    // --- INPUT REPEAT ENGINE ---
-    const moveRepeater = new ActionRepeater(() => {
-        if (moveDirection.dx !== 0 || moveDirection.dy !== 0) {
-            return game.move(moveDirection.dx, moveDirection.dy);
-        }
-        return false;
-    });
+    // moveDirection is now only used for keyboard/auto-repeating features if added later.
+    // Swiping now uses a direct distance-based delta system.
+    let isGliding = false;
 
     const undoRepeater = new ActionRepeater(() => {
         const success = game.undo();
@@ -588,11 +584,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         const isTwoFingers = (activePointers.size >= 2);
 
         if (isRightClick || isTwoFingers) {
-            moveRepeater.stop(); // Stop any active movement
             undoRepeater.start();
         } else if (activePointers.size === 1) {
             // Start of a potential swipe / single-finger movement
             swipeOrigin = { x: e.screenX, y: e.screenY };
+            isGliding = false;
+            moveDirection = { dx: 0, dy: 0 };
         }
     });
 
@@ -610,22 +607,36 @@ document.addEventListener('DOMContentLoaded', async () => {
             const dx = e.screenX - swipeOrigin.x;
             const dy = e.screenY - swipeOrigin.y;
 
-            if (Math.abs(dx) > swipeThreshold || Math.abs(dy) > swipeThreshold) {
-                let nextDir;
-                if (Math.abs(dx) > Math.abs(dy)) {
-                    nextDir = { dx: dx > 0 ? 1 : -1, dy: 0 };
+            // Determine current dominant direction
+            let nextDir = { dx: 0, dy: 0 };
+            if (Math.abs(dx) > Math.abs(dy)) {
+                nextDir.dx = dx > 0 ? 1 : -1;
+            } else {
+                nextDir.dy = dy > 0 ? 1 : -1;
+            }
+
+            // Direction change detection
+            if (nextDir.dx !== moveDirection.dx || nextDir.dy !== moveDirection.dy) {
+                moveDirection = nextDir;
+                swipeOrigin = { x: e.screenX, y: e.screenY }; // Reset origin on turns
+                isGliding = false;
+                return;
+            }
+
+            // Tile-Relative Distance Check
+            const cellSize = parseInt(getComputedStyle(board).getPropertyValue('--cell-size')) || 60;
+            const dist = Math.abs(nextDir.dx !== 0 ? dx : dy);
+            const threshold = isGliding ? cellSize * 0.5 : cellSize * 0.8;
+
+            if (dist > threshold) {
+                if (game.move(nextDir.dx, nextDir.dy)) {
+                    isGliding = true;
+                    // Move origin forward by used threshold to preserve carry-over distance
+                    swipeOrigin.x += nextDir.dx * threshold;
+                    swipeOrigin.y += nextDir.dy * threshold;
                 } else {
-                    nextDir = { dx: 0, dy: dy > 0 ? 1 : -1 };
-                }
-
-                // If direction changed (Steering), update it and reset origin to current point
-                if (nextDir.dx !== moveDirection.dx || nextDir.dy !== moveDirection.dy) {
-                    moveDirection = nextDir;
-                    swipeOrigin = { x: e.screenX, y: e.screenY }; // Pivot point for next steering
-
-                    if (!moveRepeater.isActive) {
-                        moveRepeater.start();
-                    }
+                    // Hit a wall, reset origin to cursor to avoid "sliding through" the wall later
+                    swipeOrigin = { x: e.screenX, y: e.screenY };
                 }
             }
         }
@@ -641,8 +652,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         if (activePointers.size === 0) {
-            moveRepeater.stop();
             swipeOrigin = null;
+            isGliding = false;
             moveDirection = { dx: 0, dy: 0 };
         }
     };
