@@ -1,5 +1,5 @@
 importScripts('js/version.js');
-const CACHE_NAME = `soko-v${SOKO_VERSION}`;
+const CACHE_NAME = `soko-v${self.SOKO_VERSION}`;
 const ASSETS = [
     './',
     './index.html',

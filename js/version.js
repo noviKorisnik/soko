@@ -1,1 +1,1 @@
-const SOKO_VERSION = '1.9';
+self.SOKO_VERSION = '1.10';

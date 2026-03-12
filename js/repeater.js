@@ -3,13 +3,16 @@ export default class ActionRepeater {
         this.actionCallback = actionCallback;
         this.initialDelay = initialDelay;
         this.repeatInterval = repeatInterval;
-        this.timer = null;
+        this.rafId = null;
         this.isActive = false;
+        this.lastActionTime = 0;
+        this.isInitialDelayPassed = false;
     }
 
     start() {
         if (this.isActive) return;
         this.isActive = true;
+        this.isInitialDelayPassed = false;
 
         // First action is immediate
         const result = this.actionCallback();
@@ -18,26 +21,35 @@ export default class ActionRepeater {
             return;
         }
 
-        // Schedule first repeat after the long delay
-        this.timer = setTimeout(() => this.run(), this.initialDelay);
+        this.lastActionTime = performance.now();
+        this.rafId = requestAnimationFrame((t) => this.loop(t));
     }
 
-    run() {
-        // 1. check if active - if not - end
+    loop(currentTime) {
         if (!this.isActive) return;
 
-        // 2. move
-        this.actionCallback();
+        const delta = currentTime - this.lastActionTime;
+        const currentInterval = this.isInitialDelayPassed ? this.repeatInterval : this.initialDelay;
 
-        // 3. set timeout for new call (without check)
-        this.timer = setTimeout(() => this.run(), this.repeatInterval);
+        if (delta >= currentInterval) {
+            const result = this.actionCallback();
+            this.lastActionTime = currentTime;
+            this.isInitialDelayPassed = true;
+
+            if (result === false) {
+                this.stop();
+                return;
+            }
+        }
+
+        this.rafId = requestAnimationFrame((t) => this.loop(t));
     }
 
     stop() {
         this.isActive = false;
-        if (this.timer) {
-            clearTimeout(this.timer);
-            this.timer = null;
+        if (this.rafId) {
+            cancelAnimationFrame(this.rafId);
+            this.rafId = null;
         }
     }
 }
