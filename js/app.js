@@ -76,10 +76,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // --- CACHE & VERSIONING ---
-    const activeCacheName = `soko-v${window.SOKO_VERSION || '1.8'}`;
+    const activeCacheName = `soko-v${self.SOKO_VERSION}`;
 
     const updateVersionUI = () => {
-        const version = (window.SOKO_VERSION || '1.8');
+        const version = self.SOKO_VERSION;
         const verElement = document.querySelector('.game-id');
         if (verElement) verElement.textContent = `SOKO-${version}-LURD`.toUpperCase();
     };
