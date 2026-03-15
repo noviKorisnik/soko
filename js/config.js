@@ -36,6 +36,13 @@ const COLLECTIONS = [
         name: 'Xsokoban Rooms',
         description: 'Classic levels from the original Xsokoban distribution. Ported for Soko.',
         levelCount: 40
+    },
+    {
+        id: 'microban',
+        levelFile: 'resources/Microban.txt',
+        name: 'Microban',
+        description: '155 acclaimed small puzzles by David W. Skinner. Highly recommended!',
+        levelCount: 155
     }
 ];
 
