@@ -569,8 +569,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (ui.reset) ui.reset.onclick = () => { game.reset(); hideOverlay(); };
 
     // --- GESTURES & MOVEMENT (Pointer Events) ---
-    const swipeThreshold = 30;
+    // Swipe threshold constants (relative to cell size, as a multiplier)
+    const SWIPE_THRESHOLD_INITIAL = 0.75; // first move in a direction
+    const SWIPE_THRESHOLD_MIN = 0.25;     // floor — fastest glide rate
+    const SWIPE_THRESHOLD_STEP = 0.12;    // reduction per consecutive move
+    // Absolute guards — override relative values on small cells
+    const SWIPE_ABS_INITIAL = 35;         // px — minimum first-move distance (deliberate intent)
+    const SWIPE_ABS_FLOOR = 12;           // px — never go below this (safely above touch noise)
+
     let swipeOrigin = null;
+    let swipeThreshold = SWIPE_THRESHOLD_INITIAL;
 
     gameContainer.addEventListener('pointerdown', (e) => {
         // If clicking on a button or modal, don't start a swipe
@@ -588,8 +596,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         } else if (activePointers.size === 1) {
             // Start of a potential swipe / single-finger movement
             swipeOrigin = { x: e.screenX, y: e.screenY };
-            isGliding = false;
             moveDirection = { dx: 0, dy: 0 };
+            swipeThreshold = SWIPE_THRESHOLD_INITIAL;
         }
     });
 
@@ -615,27 +623,31 @@ document.addEventListener('DOMContentLoaded', async () => {
                 nextDir.dy = dy > 0 ? 1 : -1;
             }
 
-            // Direction change detection
+            // Direction change — pivot origin and reset threshold
             if (nextDir.dx !== moveDirection.dx || nextDir.dy !== moveDirection.dy) {
                 moveDirection = nextDir;
-                swipeOrigin = { x: e.screenX, y: e.screenY }; // Reset origin on turns
-                isGliding = false;
-                return;
+                swipeOrigin = { x: e.screenX, y: e.screenY };
+                swipeThreshold = SWIPE_THRESHOLD_INITIAL;
+                // Don't return — fall through and attempt a move on the same event
             }
 
-            // Tile-Relative Distance Check
+            // Tile-Relative Distance Check with adaptive (decreasing) threshold + absolute guards
             const cellSize = parseInt(getComputedStyle(board).getPropertyValue('--cell-size')) || 60;
             const dist = Math.abs(nextDir.dx !== 0 ? dx : dy);
-            const threshold = isGliding ? cellSize * 0.5 : cellSize * 0.8;
+            const isFirstMove = (swipeThreshold === SWIPE_THRESHOLD_INITIAL);
+            const relativeThreshold = cellSize * swipeThreshold;
+            const absGuard = isFirstMove ? SWIPE_ABS_INITIAL : SWIPE_ABS_FLOOR;
+            const threshold = Math.max(relativeThreshold, absGuard);
 
             if (dist > threshold) {
                 if (game.move(nextDir.dx, nextDir.dy)) {
-                    isGliding = true;
-                    // Move origin forward by used threshold to preserve carry-over distance
+                    // Step threshold down towards minimum after each successful move
+                    swipeThreshold = Math.max(SWIPE_THRESHOLD_MIN, swipeThreshold - SWIPE_THRESHOLD_STEP);
+                    // Advance origin by exact threshold used, preserving carry-over distance
                     swipeOrigin.x += nextDir.dx * threshold;
                     swipeOrigin.y += nextDir.dy * threshold;
                 } else {
-                    // Hit a wall, reset origin to cursor to avoid "sliding through" the wall later
+                    // Hit a wall — reset origin to current position
                     swipeOrigin = { x: e.screenX, y: e.screenY };
                 }
             }
