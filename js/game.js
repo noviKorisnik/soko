@@ -167,7 +167,6 @@ export default class SokobanGame {
 
                 const char = (this.grid[y] && this.grid[y][x]) || ' ';
                 const cell = document.createElement('div');
-                cell.classList.add('cell');
 
                 if (char === this.CELL_TYPES.WALL) {
                     cell.classList.add('wall');
@@ -178,16 +177,12 @@ export default class SokobanGame {
                 }
 
                 if (char === this.CELL_TYPES.PLAYER || char === this.CELL_TYPES.PLAYER_ON_TARGET) {
-                    const player = document.createElement('div');
-                    player.classList.add('cell', 'player');
-                    cell.appendChild(player);
+                    cell.classList.add('player');
                 } else if (char === this.CELL_TYPES.BOX || char === this.CELL_TYPES.BOX_ON_TARGET) {
-                    const box = document.createElement('div');
-                    box.classList.add('cell', 'box');
+                    cell.classList.add('box');
                     if (char === this.CELL_TYPES.BOX_ON_TARGET) {
-                        box.classList.add('box-on-target');
+                        cell.classList.add('box-on-target');
                     }
-                    cell.appendChild(box);
                 }
 
                 this.boardElement.appendChild(cell);
