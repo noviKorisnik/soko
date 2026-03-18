@@ -526,7 +526,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // moveDirection is now only used for keyboard/auto-repeating features if added later.
     // Swiping now uses a direct distance-based delta system.
-    let isGliding = false;
 
     const undoRepeater = new ActionRepeater(() => {
         const success = game.undo();
@@ -551,7 +550,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         btn.addEventListener('pointerdown', (e) => {
             if (e.button !== 0) return; // Only left-click
-            if (moveRepeater.isActive) return; // Ignore during active swipe
+            // Ignore if active touch swipe is happening (swipeOrigin is declared below)
+            if (typeof swipeOrigin !== 'undefined' && swipeOrigin) return;
             btn.setPointerCapture(e.pointerId);
             repeater.start();
         });
@@ -665,7 +665,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (activePointers.size === 0) {
             swipeOrigin = null;
-            isGliding = false;
             moveDirection = { dx: 0, dy: 0 };
         }
     };
@@ -679,23 +678,37 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.addEventListener('gameStateChanged', updateUIState);
     document.addEventListener('levelComplete', (e) => {
-        overlay.classList.remove('hidden');
-        const overlayTitle = document.getElementById('overlay-title');
-        const overlayText = document.getElementById('overlay-text');
-        const isLast = e.detail && e.detail.isLast;
+        const container = document.getElementById('game-container');
+        const badge = document.getElementById('completed-badge');
+        
+        container?.classList.add('level-celebrating');
+        badge?.classList.add('show');
 
-        if (overlayTitle) {
-            overlayTitle.textContent = isLast ? "Epic Victory!" : "Level Complete!";
-        }
+        setTimeout(() => {
+            container?.classList.remove('level-celebrating');
+            container?.classList.add('level-solved');
+        }, 400); // Very fast 400ms hold, then kicks off the lazy 2.5s fade
 
-        if (overlayText) {
-            overlayText.textContent = isLast
-                ? `You have conquered all puzzles in the ${CONFIG.COLLECTION_NAME} collection!`
-                : "Excellent job!";
-        }
+        setTimeout(() => {
+            game.isCelebrating = false;
+            overlay.classList.remove('hidden');
+            const overlayTitle = document.getElementById('overlay-title');
+            const overlayText = document.getElementById('overlay-text');
+            const isLast = e.detail && e.detail.isLast;
 
-        nextLevelBtn.style.display = isLast ? 'none' : 'block';
-        updateUIState();
+            if (overlayTitle) {
+                overlayTitle.textContent = isLast ? "Epic Victory!" : "Level Complete!";
+            }
+
+            if (overlayText) {
+                overlayText.textContent = isLast
+                    ? `You have conquered all puzzles in the ${CONFIG.COLLECTION_NAME} collection!`
+                    : "Excellent job!";
+            }
+
+            nextLevelBtn.style.display = isLast ? 'none' : 'block';
+            updateUIState();
+        }, 3000); // 3 seconds before bringing up modal
     });
 
     document.addEventListener('levelLoaded', () => {

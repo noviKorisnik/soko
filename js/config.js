@@ -50,8 +50,8 @@ const COLLECTIONS = [
 COLLECTIONS.forEach(c => c.storagePrefix = `soko_${c.id}`);
 
 // Determine active collection
-const savedCollection = localStorage.getItem('soko_active_collection') || 'classic';
-const activeCollection = COLLECTIONS.find(c => c.id === savedCollection) || COLLECTIONS[1];
+const savedCollection = localStorage.getItem('soko_active_collection') || 'microban';
+const activeCollection = COLLECTIONS.find(c => c.id === savedCollection) || COLLECTIONS.find(c => c.id === 'microban');
 
 const CONFIG = {
     ...activeCollection,
