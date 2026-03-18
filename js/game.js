@@ -13,6 +13,7 @@ export default class SokobanGame {
         this.currentLevelIndex = 0;
         this.highestCompletedLevel = parseInt(localStorage.getItem(`${CONFIG.storagePrefix}_highest`)) || 0;
         this.isCompleted = false;
+        this.isCelebrating = false;
         this.levels = [];
         this.grid = []; // 2D array of cells
         this.playerPos = { x: 0, y: 0 };
@@ -50,6 +51,7 @@ export default class SokobanGame {
         this.currentLevelIndex = index;
         localStorage.setItem(`${CONFIG.storagePrefix}_current_level`, index);
         this.isCompleted = false;
+        this.isCelebrating = false;
 
         const savedData = useSavedState ? this.getSavedState(index) : null;
 
@@ -287,6 +289,7 @@ export default class SokobanGame {
     }
 
     undo() {
+        if (this.isCelebrating) return false;
         if (this.history.length === 0) return false;
 
         const lastMove = this.history.slice(-1);
@@ -348,6 +351,7 @@ export default class SokobanGame {
     }
 
     reset() {
+        if (this.isCelebrating) return false;
         this.loadLevel(this.currentLevelIndex, false);
         this.saveState();
     }
@@ -360,6 +364,7 @@ export default class SokobanGame {
         }
 
         this.isCompleted = true;
+        this.isCelebrating = true;
 
         // Update highest completed
         if (this.currentLevelIndex >= this.highestCompletedLevel) {

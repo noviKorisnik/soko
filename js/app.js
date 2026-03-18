@@ -687,9 +687,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         setTimeout(() => {
             container?.classList.remove('level-celebrating');
             container?.classList.add('level-solved');
-        }, 1200); // 1.2s bright glow
+        }, 400); // Very fast 400ms hold, then kicks off the lazy 2.5s fade
 
         setTimeout(() => {
+            game.isCelebrating = false;
             overlay.classList.remove('hidden');
             const overlayTitle = document.getElementById('overlay-title');
             const overlayText = document.getElementById('overlay-text');
