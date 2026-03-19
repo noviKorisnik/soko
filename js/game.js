@@ -364,7 +364,10 @@ export default class SokobanGame {
         }
 
         this.isCompleted = true;
-        this.isCelebrating = true;
+        
+        if (triggerEvent) {
+            this.isCelebrating = true;
+        }
 
         // Update highest completed
         if (this.currentLevelIndex >= this.highestCompletedLevel) {
