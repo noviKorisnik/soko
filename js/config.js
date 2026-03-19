@@ -43,6 +43,20 @@ const COLLECTIONS = [
         name: 'Microban',
         description: '155 acclaimed small puzzles by David W. Skinner. Highly recommended!',
         levelCount: 155
+    },
+    {
+        id: 'nabokosmos',
+        levelFile: 'resources/Nabokosmos.txt',
+        name: 'Nabokosmos',
+        description: '40 modern, clean, and extremely clever levels by Aymeric du Peloux.',
+        levelCount: 40
+    },
+    {
+        id: 'sasquatch',
+        levelFile: 'resources/Sasquatch.txt',
+        name: 'Sasquatch',
+        description: 'The first set of 50 legendary puzzles by David W. Skinner.',
+        levelCount: 50
     }
 ];
 
