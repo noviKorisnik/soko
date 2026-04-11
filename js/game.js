@@ -55,13 +55,15 @@ export default class SokobanGame {
 
         const savedData = useSavedState ? this.getSavedState(index) : null;
 
-        if (savedData) {
+        if (savedData && savedData.grid) {
+            // Backwards compatibility with chunky unoptimized saves
             this.grid = savedData.grid;
             this.playerPos = savedData.playerPos;
             this.moves = savedData.moves;
             this.pushes = savedData.pushes;
             this.history = savedData.history || '';
         } else {
+            // Start from the base level definition
             const levelData = this.levels[index];
             const rawGrid = SokobanParser.normalizeGrid(levelData.grid);
 
@@ -76,6 +78,42 @@ export default class SokobanGame {
             this.moves = 0;
             this.pushes = 0;
             this.history = '';
+
+            // If we have an optimized saved state (just a history string), replay it at lightning speed
+            if (savedData && savedData.history) {
+                const hist = savedData.history;
+                
+                // Temporarily disable expensive ops during simulation
+                const originalRender = this.render;
+                const originalSaveState = this.saveState;
+                const originalUpdateStats = this.updateStats;
+                const originalCheckWin = this.checkWin;
+                const origRotated = this.isViewRotated;
+                
+                this.render = () => {};
+                this.saveState = () => {};
+                this.updateStats = () => {};
+                this.checkWin = () => false;
+                this.isViewRotated = false; // history moves are unrotated 'lurd'
+                
+                for (const char of hist) {
+                    const c = char.toLowerCase();
+                    let dx = 0, dy = 0;
+                    if (c === 'u') dy = -1;
+                    else if (c === 'd') dy = 1;
+                    else if (c === 'l') dx = -1;
+                    else if (c === 'r') dx = 1;
+                    
+                    this.move(dx, dy);
+                }
+                
+                // Restore logic
+                this.render = originalRender;
+                this.saveState = originalSaveState;
+                this.updateStats = originalUpdateStats;
+                this.checkWin = originalCheckWin;
+                this.isViewRotated = origRotated;
+            }
         }
 
         this.updateStats();
@@ -387,10 +425,6 @@ export default class SokobanGame {
     // Persistence Helpers
     saveState() {
         const data = {
-            grid: this.grid,
-            playerPos: this.playerPos,
-            moves: this.moves,
-            pushes: this.pushes,
             history: this.history
         };
         localStorage.setItem(`${CONFIG.storagePrefix}_state_${this.currentLevelIndex}`, JSON.stringify(data));

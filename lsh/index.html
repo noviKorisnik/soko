@@ -111,16 +111,11 @@
                     let val = localStorage.getItem(key);
                     try {
                         let parsed = JSON.parse(val);
-                        // Compress grid arrays of arrays to a single string separated by '|' to drastically reduce JSON size
-                        if (parsed.grid && Array.isArray(parsed.grid) && Array.isArray(parsed.grid[0])) {
-                            parsed.grid = parsed.grid.map(row => row.join('')).join('|');
-                        }
-                        if (parsed.history && Array.isArray(parsed.history)) {
-                            parsed.history.forEach(state => {
-                                if (state.grid && Array.isArray(state.grid) && Array.isArray(state.grid[0])) {
-                                    state.grid = state.grid.map(row => row.join('')).join('|');
-                                }
-                            });
+                        // Engine Upgrade: The local storage engine now purely reads 'history' (lurd strings).
+                        // Meaning any legacy saves still sitting in your storage that have heavy .grid arrays
+                        // will be actively stripped out and upgraded right here on the fly!
+                        if (parsed && typeof parsed === 'object' && parsed.grid !== undefined) {
+                            parsed = { history: parsed.history || '' }; // Ditch the grid entirely!
                         }
                         data[key] = parsed;
                     } catch(e) {
@@ -163,17 +158,8 @@
                 for (const key in data) {
                     let val = data[key];
                     if (typeof val === 'object' && val !== null) {
-                        // Decompress grid strings back to array of arrays
-                        if (val.grid && typeof val.grid === 'string') {
-                            val.grid = val.grid.split('|').map(row => row.split(''));
-                        }
-                        if (val.history && Array.isArray(val.history)) {
-                            val.history.forEach(state => {
-                                if (state.grid && typeof state.grid === 'string') {
-                                    state.grid = state.grid.split('|').map(row => row.split(''));
-                                }
-                            });
-                        }
+                        // No more grid parsing or compression logic needed!
+                        // The engine only cares about parsed.history strings now.
                         localStorage.setItem(key, JSON.stringify(val));
                     } else {
                         localStorage.setItem(key, val);
