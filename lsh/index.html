@@ -78,19 +78,43 @@
     <p>Paste the code from your old device here and click Import. <strong>Warning:</strong> This will overwrite existing keys with the same name.</p>
     <textarea id="importArea" placeholder='{"gameProgress": "..."}'></textarea>
     <button onclick="importData()">Import Data</button>
-    <button class="danger" onclick="clearData()">Clear Local Storage</button>
+    
+    <h2>Maintenance</h2>
+    <p>Use these buttons to clean up your local storage if needed.</p>
+    <button class="danger" onclick="clearTrash()">Clear Trash Data</button>
+    <button class="danger" onclick="clearProgress()">Reset Game Progress</button>
 
-    <script>
-        function updateExport() {
+    <script type="module">
+        import CONFIG from '../js/config.js';
+
+        window.updateExport = function() {
             const data = {};
+            const validPrefixes = CONFIG.COLLECTIONS.map(c => `soko_${c.id}`);
+            const exactKeys = ['soko_active_collection'];
+
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
-                data[key] = localStorage.getItem(key);
+                
+                let isValid = exactKeys.includes(key);
+                if (!isValid) {
+                    for (const prefix of validPrefixes) {
+                        if (key === `${prefix}_highest` || 
+                            key === `${prefix}_current_level` || 
+                            key.startsWith(`${prefix}_state_`)) {
+                            isValid = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (isValid) {
+                    data[key] = localStorage.getItem(key);
+                }
             }
             document.getElementById('exportArea').value = JSON.stringify(data);
-        }
+        };
 
-        function copyExport() {
+        window.copyExport = function() {
             const exportArea = document.getElementById('exportArea');
             exportArea.select();
             try {
@@ -108,9 +132,9 @@
             } catch (err) {
                 alert('Press Ctrl/Cmd+C to copy the selected text');
             }
-        }
+        };
 
-        function importData() {
+        window.importData = function() {
             try {
                 const importText = document.getElementById('importArea').value;
                 if (!importText) {
@@ -124,23 +148,72 @@
                     count++;
                 }
                 alert('Successfully imported ' + count + ' items! You can now go back to the game.');
-                updateExport();
+                window.updateExport();
             } catch (e) {
                 alert('Invalid data format. Please make sure you copied the exact text.');
                 console.error(e);
             }
-        }
+        };
 
-        function clearData() {
-            if (confirm('Are you sure you want to clear all local game data on this device? This cannot be undone!')) {
-                localStorage.clear();
-                updateExport();
-                alert('Local storage cleared.');
+        window.clearTrash = function() {
+            if (confirm('Are you sure you want to delete old/unused game data? This keeps your current progress.')) {
+                const validPrefixes = CONFIG.COLLECTIONS.map(c => `soko_${c.id}`);
+                const exactKeys = ['soko_active_collection'];
+                const trashKeys = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    
+                    let isTrash = true;
+                    if (exactKeys.includes(key)) {
+                        isTrash = false;
+                    } else {
+                        for (const prefix of validPrefixes) {
+                            if (key === `${prefix}_highest` || 
+                                key === `${prefix}_current_level` || 
+                                key.startsWith(`${prefix}_state_`)) {
+                                isTrash = false;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (isTrash) {
+                        trashKeys.push(key);
+                    }
+                }
+                
+                if (trashKeys.length === 0) {
+                    alert('No trash data found!');
+                    return;
+                }
+                
+                trashKeys.forEach(k => localStorage.removeItem(k));
+                alert('Cleared ' + trashKeys.length + ' obsolete/trash data keys.');
             }
-        }
+        };
+
+        window.clearProgress = function() {
+            if (confirm('Are you sure you want to RESET your active game progress on this device? This cannot be undone!')) {
+                // Since this subdomain is dedicated, we'll only delete the valid ones just to be surgical, or we could delete all. 
+                // Let's delete the valid keys.
+                const validPrefixes = CONFIG.COLLECTIONS.map(c => `soko_${c.id}`);
+                const exactKeys = ['soko_active_collection'];
+                const keysToRemove = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    let isGameKey = exactKeys.includes(key) || validPrefixes.some(p => key.startsWith(p));
+                    if (isGameKey) {
+                        keysToRemove.push(key);
+                    }
+                }
+                keysToRemove.forEach(k => localStorage.removeItem(k));
+                window.updateExport();
+                alert('Active game progress has been reset.');
+            }
+        };
 
         // Initialize export area on load
-        updateExport();
+        window.updateExport();
     </script>
 </body>
 </html>
