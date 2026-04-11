@@ -108,7 +108,24 @@
                 }
 
                 if (isValid) {
-                    data[key] = localStorage.getItem(key);
+                    let val = localStorage.getItem(key);
+                    try {
+                        let parsed = JSON.parse(val);
+                        // Compress grid arrays of arrays to a single string separated by '|' to drastically reduce JSON size
+                        if (parsed.grid && Array.isArray(parsed.grid) && Array.isArray(parsed.grid[0])) {
+                            parsed.grid = parsed.grid.map(row => row.join('')).join('|');
+                        }
+                        if (parsed.history && Array.isArray(parsed.history)) {
+                            parsed.history.forEach(state => {
+                                if (state.grid && Array.isArray(state.grid) && Array.isArray(state.grid[0])) {
+                                    state.grid = state.grid.map(row => row.join('')).join('|');
+                                }
+                            });
+                        }
+                        data[key] = parsed;
+                    } catch(e) {
+                        data[key] = val; // fallback for non-JSON strings
+                    }
                 }
             }
             document.getElementById('exportArea').value = JSON.stringify(data);
@@ -144,7 +161,23 @@
                 const data = JSON.parse(importText);
                 let count = 0;
                 for (const key in data) {
-                    localStorage.setItem(key, data[key]);
+                    let val = data[key];
+                    if (typeof val === 'object' && val !== null) {
+                        // Decompress grid strings back to array of arrays
+                        if (val.grid && typeof val.grid === 'string') {
+                            val.grid = val.grid.split('|').map(row => row.split(''));
+                        }
+                        if (val.history && Array.isArray(val.history)) {
+                            val.history.forEach(state => {
+                                if (state.grid && typeof state.grid === 'string') {
+                                    state.grid = state.grid.split('|').map(row => row.split(''));
+                                }
+                            });
+                        }
+                        localStorage.setItem(key, JSON.stringify(val));
+                    } else {
+                        localStorage.setItem(key, val);
+                    }
                     count++;
                 }
                 alert('Successfully imported ' + count + ' items! You can now go back to the game.');
