@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LSH - Sync Progress</title>
+    <style>
+        body { 
+            font-family: sans-serif; 
+            padding: 20px; 
+            max-width: 600px; 
+            margin: 0 auto; 
+            background: #121212; 
+            color: #e0e0e0; 
+        }
+        h1, h2, h3 { 
+            color: #4caf50; 
+        }
+        p {
+            font-size: 14px;
+            color: #aaa;
+        }
+        textarea { 
+            width: 100%; 
+            height: 150px; 
+            margin-bottom: 10px; 
+            background: #1e1e1e; 
+            color: #fff; 
+            border: 1px solid #444; 
+            padding: 10px; 
+            box-sizing: border-box; 
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        button { 
+            padding: 12px 20px; 
+            background: #4caf50; 
+            color: #fff; 
+            border: none; 
+            border-radius: 4px;
+            cursor: pointer; 
+            margin-right: 10px; 
+            margin-bottom: 20px; 
+            font-weight: bold;
+        }
+        button:hover { 
+            background: #45a049; 
+        }
+        .danger { 
+            background: #f44336; 
+        }
+        .danger:hover { 
+            background: #da190b; 
+        }
+        .nav-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #4caf50;
+            text-decoration: none;
+        }
+        .nav-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="nav-link">&larr; Back to Game</a>
+    
+    <h1>LSH - Local Storage Sync</h1>
+    <p>Use this tool to transfer your game progress between devices.</p>
+    
+    <h2>Export (From Old Device)</h2>
+    <p>Copy the code below from your old device and send it to your new device (e.g., via email or messaging app).</p>
+    <textarea id="exportArea" readonly></textarea>
+    <button onclick="copyExport()">Copy to Clipboard</button>
+
+    <h2>Import (To New Device)</h2>
+    <p>Paste the code from your old device here and click Import. <strong>Warning:</strong> This will overwrite existing keys with the same name.</p>
+    <textarea id="importArea" placeholder='{"gameProgress": "..."}'></textarea>
+    <button onclick="importData()">Import Data</button>
+    <button class="danger" onclick="clearData()">Clear Local Storage</button>
+
+    <script>
+        function updateExport() {
+            const data = {};
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                data[key] = localStorage.getItem(key);
+            }
+            document.getElementById('exportArea').value = JSON.stringify(data);
+        }
+
+        function copyExport() {
+            const exportArea = document.getElementById('exportArea');
+            exportArea.select();
+            try {
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(exportArea.value).then(() => {
+                        alert('Copied to clipboard!');
+                    }).catch(err => {
+                        document.execCommand('copy');
+                        alert('Copied to clipboard! (Fallback)');
+                    });
+                } else {
+                    document.execCommand('copy');
+                    alert('Copied to clipboard!');
+                }
+            } catch (err) {
+                alert('Press Ctrl/Cmd+C to copy the selected text');
+            }
+        }
+
+        function importData() {
+            try {
+                const importText = document.getElementById('importArea').value;
+                if (!importText) {
+                    alert('Please paste exported data first.');
+                    return;
+                }
+                const data = JSON.parse(importText);
+                let count = 0;
+                for (const key in data) {
+                    localStorage.setItem(key, data[key]);
+                    count++;
+                }
+                alert('Successfully imported ' + count + ' items! You can now go back to the game.');
+                updateExport();
+            } catch (e) {
+                alert('Invalid data format. Please make sure you copied the exact text.');
+                console.error(e);
+            }
+        }
+
+        function clearData() {
+            if (confirm('Are you sure you want to clear all local game data on this device? This cannot be undone!')) {
+                localStorage.clear();
+                updateExport();
+                alert('Local storage cleared.');
+            }
+        }
+
+        // Initialize export area on load
+        updateExport();
+    </script>
+</body>
+</html>
