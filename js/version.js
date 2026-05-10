@@ -1,1 +1,1 @@
-self.SOKO_VERSION = '1.17';
+self.SOKO_VERSION = '1.18';

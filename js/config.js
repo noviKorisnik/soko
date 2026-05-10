@@ -52,6 +52,13 @@ const COLLECTIONS = [
         levelCount: 40
     },
     {
+        id: 'microcosmos',
+        levelFile: 'resources/Microcosmos.txt',
+        name: 'Microcosmos',
+        description: '40 additional masterpiece puzzles by Aymeric du Peloux. Compact and extremely clever.',
+        levelCount: 40
+    },
+    {
         id: 'sasquatch',
         levelFile: 'resources/Sasquatch.txt',
         name: 'Sasquatch',

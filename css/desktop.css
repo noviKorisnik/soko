@@ -104,13 +104,15 @@ h1 {
 
 #message-overlay.hidden,
 #about-modal.hidden,
-#settings-modal.hidden {
+#settings-modal.hidden,
+#confirm-modal.hidden {
     opacity: 0;
     pointer-events: none;
 }
 
 #about-modal,
-#settings-modal {
+#settings-modal,
+#confirm-modal {
     position: fixed;
     top: 0;
     left: 0;

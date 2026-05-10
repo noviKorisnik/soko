@@ -26,9 +26,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const overlay = document.getElementById('message-overlay');
     const aboutModal = document.getElementById('about-modal');
     const settingsModal = document.getElementById('settings-modal');
+    const confirmModal = document.getElementById('confirm-modal');
 
     const nextLevelBtn = document.getElementById('next-level-btn');
     const cancelBtn = document.getElementById('cancel-overlay-btn');
+
+    const confirmYesBtn = document.getElementById('confirm-yes-btn');
+    const confirmNoBtn = document.getElementById('confirm-no-btn');
 
     const helpBtn = document.getElementById(`help-btn-${suffix}`);
     const closeAboutBtn = document.getElementById('close-about-btn');
@@ -440,11 +444,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     // Close on backdrop click
-    [aboutModal, settingsModal].forEach(modal => {
+    [aboutModal, settingsModal, confirmModal].forEach(modal => {
         modal.onclick = (e) => {
             if (e.target === modal) modal.classList.add('hidden');
         };
     });
+
+    let pendingAction = null;
+    const showConfirmModal = (action) => {
+        pendingAction = action;
+        confirmModal.classList.remove('hidden');
+    };
+
+    confirmYesBtn.onclick = () => {
+        confirmModal.classList.add('hidden');
+        if (pendingAction) pendingAction();
+        pendingAction = null;
+    };
+
+    confirmNoBtn.onclick = () => {
+        confirmModal.classList.add('hidden');
+        pendingAction = null;
+    };
 
     // Inputs & Logic
     const ui = {
@@ -481,6 +502,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (e.key === 'Escape') {
                 aboutModal.classList.add('hidden');
                 settingsModal.classList.add('hidden');
+                confirmModal.classList.add('hidden');
                 cancelBtn.click();
             }
             if (e.key === 'Enter' && !overlay.classList.contains('hidden')) nextLevelBtn.click();
@@ -519,6 +541,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const nextPossible = (game.currentLevelIndex < game.highestCompletedLevel || game.isCompleted);
                 if (nextPossible) game.loadLevel(nextIdx);
             } else {
+                // Guard for accidental back navigation on current level with progress
+                if (game.currentLevelIndex === game.highestCompletedLevel && game.history.length > 0) {
+                    showConfirmModal(() => {
+                        game.loadLevel(nextIdx);
+                    });
+                    return false; // Stop repeater
+                }
                 game.loadLevel(nextIdx);
             }
         }
@@ -702,7 +731,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if (overlayText) {
                 overlayText.textContent = isLast
-                    ? `You have conquered all puzzles in the ${CONFIG.COLLECTION_NAME} collection!`
+                    ? `You have conquered all puzzles in the ${CONFIG.name} collection!`
                     : "Excellent job!";
             }
 
