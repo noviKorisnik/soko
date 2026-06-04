@@ -64,6 +64,20 @@ const COLLECTIONS = [
         name: 'Sasquatch',
         description: 'The first set of 50 legendary puzzles by David W. Skinner.',
         levelCount: 50
+    },
+    {
+        id: 'minicosmos',
+        levelFile: 'resources/Minicosmos.txt',
+        name: 'Minicosmos',
+        description: '40 additional masterpiece puzzles by Aymeric du Peloux. Compact and extremely clever.',
+        levelCount: 40
+    },
+    {
+        id: 'picokosmos',
+        levelFile: 'resources/Picokosmos.txt',
+        name: 'Picokosmos',
+        description: '20 masterfully designed mini puzzles by Aymeric du Peloux. Compact and extremely clever.',
+        levelCount: 20
     }
 ];
 
